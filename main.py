@@ -18,7 +18,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 app = FastAPI()
 # Serve static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Root route serves index.html
 @app.get("/")
