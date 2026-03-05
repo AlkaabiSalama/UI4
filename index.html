@@ -169,7 +169,7 @@
       border: 1px solid #4b5563;
       background: #020617;
       padding: 8px;
-      height: 140px;          /* fixed height, scrolls */
+      height: 140px;
       overflow-y: auto;
       font-size: 12px;
       margin-bottom: 8px;
@@ -196,7 +196,7 @@
       border-radius: 999px;
       border: 1px solid #4b5563;
       background: #020617;
-      color: var(--text-main);
+      color: #text-main;
       font-size: 12px;
       padding: 6px 12px;
     }
@@ -277,9 +277,11 @@
       font-size: 10px;
       color: #e5e7eb;
       backdrop-filter: blur(6px);
+      z-index: 9999;
+      pointer-events: none;
     }
 
-    /* NEW: Dynamic World legend (bottom-right) */
+    /* Dynamic World legend */
     .map-legend {
       position: absolute;
       bottom: 10px;
@@ -291,6 +293,8 @@
       box-shadow: 0 16px 32px rgba(0, 0, 0, 0.8);
       font-size: 11px;
       min-width: 150px;
+      z-index: 9999;             /* always on top */
+      pointer-events: none;      /* don't block map clicks */
     }
 
     .map-legend-title {
@@ -427,7 +431,7 @@
           <label for="city">Region (city name)</label>
           <input id="city" type="text" placeholder="Abu Dhabi, Dubai, Berlin..." />
           <div class="field-caption">
-            Backend: geocode this city → update Earth Engine point + map tiles.
+            You can also type: "set location to Dubai" in the chat.
           </div>
         </section>
 
@@ -451,7 +455,7 @@
               type="text"
               id="chat-input"
               class="chat-input"
-              placeholder="Ask about the map or say 'swap years', 'reset map'..."
+              placeholder="Ask about the map, or say 'set location to Dubai', 'swap years'..."
               autocomplete="off"
             />
             <button type="submit" class="chat-send">Send</button>
@@ -473,7 +477,6 @@
             </div>
           </div>
           <div class="map-overlay-badge">Live</div>
-          <!-- NEW: legend container -->
           <div class="map-legend" id="map-legend"></div>
         </div>
 
@@ -501,14 +504,14 @@
     </main>
   </div>
 
-  <script
+    <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
 
   <script>
-    // same host as backend
+    // Same backend host
     const API_BASE = "";
 
     // --- Dynamic World legend data ---
@@ -547,42 +550,42 @@
 
     const defaultCenter = [26.3, 55.28];
 
-    const baseDarkA = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> ' +
-          "&copy; <a href='https://carto.com/attributions'>CARTO</a>",
-        maxZoom: 19
-      }
-    );
+    // Only ORIGINAL SATELLITE as base map
+    const SAT_URL  = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+
+    // Map A (before)
+    const satelliteA = L.tileLayer(SAT_URL, {
+      attribution: "Esri & others",
+      maxZoom: 19
+    });
 
     const mapA = L.map("mapA", {
       center: defaultCenter,
       zoom: 3,
-      layers: [baseDarkA]
+      layers: [satelliteA]   // default = original satellite
     });
 
-    const baseDarkB = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> ' +
-          "&copy; <a href='https://carto.com/attributions'>CARTO</a>",
-        maxZoom: 19
-      }
-    );
+    // Map B (after)
+    const satelliteB = L.tileLayer(SAT_URL, {
+      attribution: "Esri & others",
+      maxZoom: 19
+    });
 
     const mapB = L.map("mapB", {
       center: defaultCenter,
       zoom: 3,
-      layers: [baseDarkB]
+      layers: [satelliteB]
     });
 
+    // Dynamic World + Change Detection overlays
     let dwLayerA = null;
     let dwLayerB = null;
     let dwLayerChangeA = null;
     let dwLayerChangeB = null;
+
+    // Layer controls for each map
+    let layerControlA = null;
+    let layerControlB = null;
 
     function currentMode() {
       const r = document.querySelector('input[name="mode"]:checked');
@@ -605,25 +608,28 @@
       };
     }
 
-    // ---- Chat → controls logic ----
+    // ---- Chat → controls logic (years, mode, location) ----
     function applyChatTextToControls(text) {
       const t = text.toLowerCase().trim();
       if (!t) return;
 
       const yearSelectA = document.getElementById("yearA");
       const yearSelectB = document.getElementById("yearB");
+      const cityInput = document.getElementById("city");
 
       const ALL_YEARS = yearsFromDom.length ? yearsFromDom : [2017,2018,2019,2020,2021,2022,2023,2024];
       const lastIndex = ALL_YEARS.length - 1;
       const defaultYearA = ALL_YEARS[Math.max(0, lastIndex - 1)];
       const defaultYearB = ALL_YEARS[lastIndex];
 
+      // reset
       if (t.includes("reset") && (t.includes("map") || t.includes("settings") || t.includes("all"))) {
         document.querySelector('input[name="mode"][value="change_detection"]').checked = true;
         yearSelectA.value = String(defaultYearA);
         yearSelectB.value = String(defaultYearB);
       }
 
+      // swap years
       if ((t.includes("swap") || t.includes("switch") || t.includes("reverse") || t.includes("flip")) && t.includes("year")) {
         const oldA = yearSelectA.value;
         const oldB = yearSelectB.value;
@@ -631,6 +637,7 @@
         yearSelectB.value = oldA;
       }
 
+      // next / previous year
       if (t.includes("next year")) {
         const curB = parseInt(yearSelectB.value, 10);
         const idx = ALL_YEARS.indexOf(curB);
@@ -647,6 +654,7 @@
         }
       }
 
+      // mode selection
       if (t.includes("change detection") || t.includes("change analysis") || t.includes("difference")) {
         document.querySelector('input[name="mode"][value="change_detection"]').checked = true;
       } else if (t.includes("time series") || t.includes("timeseries") || t.includes("timeline")) {
@@ -655,6 +663,7 @@
         document.querySelector('input[name="mode"][value="single_year"]').checked = true;
       }
 
+      // numeric years in text
       const found = Array.from(t.matchAll(/\b(19[0-9]{2}|20[0-9]{2})\b/g))
         .map(m => parseInt(m[1], 10))
         .filter(y => ALL_YEARS.includes(y));
@@ -673,9 +682,26 @@
           document.querySelector('input[name="mode"][value="change_detection"]').checked = true;
         }
       }
+
+      // "set location to Dubai"
+      const locMatch = t.match(/(?:set|change)\s+(?:city|location|region)\s+to\s+(.+)/);
+      if (locMatch && locMatch[1]) {
+        cityInput.value = locMatch[1].trim();
+        return;
+      }
+
+      // short city-only message: "dubai", "abu dhabi", "berlin"
+      const controlWords = ["year", "map", "mode", "reset", "swap", "change detection", "time series", "single year"];
+      const hasControlWord = controlWords.some(w => t.includes(w));
+      const hasDigits = /\d/.test(t);
+      const wordCount = t.split(/\s+/).filter(Boolean).length;
+
+      if (!hasControlWord && !hasDigits && wordCount > 0 && wordCount <= 4) {
+        cityInput.value = text.trim();
+      }
     }
 
-    // ---- Map config from backend ----
+    // ---- Map config from backend + layer control with 3 options ----
     async function loadMapFromBackend() {
       const state = getUIState();
 
@@ -697,6 +723,7 @@
         mapA.setView(center, 11);
         mapB.setView(center, 11);
 
+        // remove old overlays
         if (dwLayerA) { mapA.removeLayer(dwLayerA); dwLayerA = null; }
         if (dwLayerChangeA) { mapA.removeLayer(dwLayerChangeA); dwLayerChangeA = null; }
         if (dwLayerB) { mapB.removeLayer(dwLayerB); dwLayerB = null; }
@@ -710,6 +737,7 @@
         const labelA = document.getElementById("map-panel-a-label");
         const labelB = document.getElementById("map-panel-b-label");
 
+        // --- add new overlays ---
         if (mode === "change_detection") {
           panelA.style.display = "flex";
           panelB.style.display = "flex";
@@ -717,18 +745,14 @@
           labelB.textContent = `After (${data.year_b})`;
 
           if (tiles.a) {
-            dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 });
-            dwLayerA.addTo(mapA);
+            dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
           }
           if (tiles.b) {
-            dwLayerB = L.tileLayer(tiles.b, { opacity: 0.9 });
-            dwLayerB.addTo(mapB);
+            dwLayerB = L.tileLayer(tiles.b, { opacity: 0.9 }).addTo(mapB);
           }
           if (tiles.change) {
-            dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.5 });
-            dwLayerChangeB = L.tileLayer(tiles.change, { opacity: 0.5 });
-            dwLayerChangeA.addTo(mapA);
-            dwLayerChangeB.addTo(mapB);
+            dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.5 }).addTo(mapA);
+            dwLayerChangeB = L.tileLayer(tiles.change, { opacity: 0.5 }).addTo(mapB);
           }
         } else {
           panelA.style.display = "flex";
@@ -740,22 +764,46 @@
 
           if (mode === "single_year") {
             if (tiles.a) {
-              dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 });
-              dwLayerA.addTo(mapA);
+              dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
             }
           } else {
             if (tiles.a) {
-              dwLayerA = L.tileLayer(tiles.a, { opacity: 0.8 });
-              dwLayerA.addTo(mapA);
+              dwLayerA = L.tileLayer(tiles.a, { opacity: 0.8 }).addTo(mapA);
             }
             if (tiles.b) {
-              dwLayerB = L.tileLayer(tiles.b, { opacity: 0.8 });
-              dwLayerB.addTo(mapA);
+              dwLayerB = L.tileLayer(tiles.b, { opacity: 0.8 }).addTo(mapA);
             }
             if (tiles.change) {
-              dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.7 });
-              dwLayerChangeA.addTo(mapA);
+              dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.7 }).addTo(mapA);
             }
+          }
+        }
+
+        // --- rebuild layer controls so they show exactly:
+        // "Original Satellite", "Dynamic World", "Change Detection"
+        if (layerControlA) {
+          mapA.removeControl(layerControlA);
+        }
+        const baseA = { "Original Satellite": satelliteA };
+        const overlaysA = {};
+        if (dwLayerA) overlaysA["Dynamic World"] = dwLayerA;
+        if (dwLayerChangeA) overlaysA["Change Detection"] = dwLayerChangeA;
+        layerControlA = L.control.layers(baseA, overlaysA, { position: "topleft" }).addTo(mapA);
+
+        if (mode === "change_detection") {
+          if (layerControlB) {
+            mapB.removeControl(layerControlB);
+          }
+          const baseB = { "Original Satellite": satelliteB };
+          const overlaysB = {};
+          if (dwLayerB) overlaysB["Dynamic World"] = dwLayerB;
+          if (dwLayerChangeB) overlaysB["Change Detection"] = dwLayerChangeB;
+          layerControlB = L.control.layers(baseB, overlaysB, { position: "topleft" }).addTo(mapB);
+        } else {
+          // in non-change modes we can hide the second control
+          if (layerControlB) {
+            mapB.removeControl(layerControlB);
+            layerControlB = null;
           }
         }
 
@@ -780,6 +828,7 @@
       .querySelectorAll('input[name="mode"]')
       .forEach(r => r.addEventListener("change", loadMapFromBackend));
 
+    // Initial load
     loadMapFromBackend();
 
     // ---- Chat ----
@@ -803,6 +852,7 @@
 
       appendMessage("user", text);
 
+      // Chat controls (years, mode, location)
       applyChatTextToControls(text);
       await loadMapFromBackend();
 
