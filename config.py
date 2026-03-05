@@ -1,7 +1,35 @@
-# Years supported by your app
+# config.py
+
+# Years supported by your app (include as many as you want)
 YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
-# Default location (Abu Dhabi example)
-LOCATION_LAT = 24.4539
-LOCATION_LON = 54.3773
+# Default location (used when city is empty or geocoding fails)
+LOCATION_LAT = 24.4539   # Abu Dhabi latitude
+LOCATION_LON = 54.3773   # Abu Dhabi longitude
 LOCATION_NAME = "Abu Dhabi"
+
+# Dynamic World class labels
+CLASS_LABELS = [
+    "Water",
+    "Trees",
+    "Grass",
+    "Flooded vegetation",
+    "Crops",
+    "Shrub & scrub",
+    "Built area",
+    "Bare ground",
+    "Snow & ice",
+]
+
+# Dynamic World class palette (hex colors as strings, without "#")
+CLASS_PALETTE = [
+    "419bdf",  # Water
+    "397d49",  # Trees
+    "88b053",  # Grass
+    "7a87c6",  # Flooded vegetation
+    "e49635",  # Crops
+    "dfc35a",  # Shrub & scrub
+    "c4281b",  # Built area
+    "a59b8f",  # Bare ground
+    "b39fe1",  # Snow & ice
+]
