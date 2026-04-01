@@ -23,6 +23,8 @@
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
       --text-soft: #9ca3af;
+      --chip-bg: #0f172a;
+      --chip-active: #2563eb;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -46,16 +48,27 @@
 
     /* TOP BAR */
     header.top-bar {
-      height: 72px;
       background: var(--bg-nav);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px 24px 14px;
     }
 
-    .top-brand { display: flex; flex-direction: column; gap: 2px; }
+    .top-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .top-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
     .top-brand-title {
       font-size: 26px;
@@ -63,76 +76,129 @@
       letter-spacing: 0.04em;
     }
 
-    .top-brand-subtitle { font-size: 12px; color: var(--text-soft); }
-    .top-right-text { font-size: 11px; color: var(--text-soft); }
-
-    /* MAIN GRID */
-    main.app-main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 290px minmax(0, 1fr);
-      grid-template-rows: minmax(0, 1fr) auto;
-      grid-template-areas:
-        "sidebar right"
-        "bottom bottom";
-      column-gap: 18px;
-      row-gap: 12px;
-      padding: 14px 24px 12px;
+    .top-brand-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
     }
 
-    @media (max-width: 1024px) {
-      main.app-main {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto minmax(0, 1fr) auto;
-        grid-template-areas:
-          "sidebar"
-          "right"
-          "bottom";
-      }
+    .top-right-text {
+      font-size: 11px;
+      color: var(--text-soft);
+      white-space: nowrap;
     }
 
-    /* LEFT SIDEBAR */
-    aside.sidebar {
-      grid-area: sidebar;
+    /* TOP SEARCH BAR */
+    .assistant-search-wrap {
       display: flex;
-      flex-direction: column;
-      gap: 16px;
-      height: 100%;
+      align-items: center;
+      gap: 10px;
+      background: #0b1220;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      padding: 8px 10px 8px 16px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
     }
 
-    .monitor-box, .chatbot-box {
-      background: var(--bg-panel);
-      border-radius: 16px;
-      border: 1px solid var(--border-subtle);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
-      padding: 14px 14px 12px;
+    .assistant-search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 14px;
+      min-width: 200px;
     }
 
-    .monitor-box { flex: 0 0 auto; }
-    .chatbot-box { flex: 0 0 auto; }
-
-    .monitor-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-    .monitor-subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
-
-    .monitor-radios { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-
-    .monitor-radio {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 13px; cursor: pointer;
+    .assistant-search-input::placeholder {
+      color: #6b7280;
     }
 
-    .monitor-radio input[type="radio"] {
-      width: 14px; height: 14px; accent-color: var(--accent);
+    .assistant-search-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
-    label {
+    .assistant-search-btn:hover {
+      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.55);
+      transform: translateY(-0.5px);
+    }
+
+    /* PAGE VIEW / FUNCTION TABS */
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .view-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .view-tab {
+      position: relative;
+    }
+
+    .view-tab input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .view-tab span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: var(--chip-bg);
+      color: var(--text-main);
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .view-tab input[type="radio"]:checked + span {
+      background: var(--chip-active);
+      border-color: #3b82f6;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+    }
+
+    .top-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field-group {
+      min-width: 140px;
+    }
+
+    .field-group label,
+    .year-box small {
       font-size: 11px;
       color: var(--text-muted);
       display: block;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
 
-    .year-row { display: flex; gap: 8px; margin-top: 6px; }
+    .year-row {
+      display: flex;
+      gap: 10px;
+      align-items: end;
+    }
 
     select, input[type="text"] {
       width: 100%;
@@ -141,7 +207,7 @@
       background: #020617;
       color: var(--text-main);
       font-size: 12px;
-      padding: 6px 10px;
+      padding: 9px 10px;
       outline: none;
     }
 
@@ -150,87 +216,32 @@
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
     }
 
-    .field-caption { font-size: 10px; color: var(--text-soft); margin-top: 4px; }
-    .monitor-divider { border-top: 1px solid #111827; margin: 10px 0 8px; }
-
-    /* Chatbot card */
-    .chatbot-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 6px; font-size: 13px; font-weight: 600;
-    }
-
-    .chat-toggle {
-      background: none; border: none; color: var(--text-soft);
-      font-size: 16px; cursor: pointer; padding: 0;
-    }
-
-    .chat-messages {
-      border-radius: 10px;
-      border: 1px solid #4b5563;
-      background: #020617;
-      padding: 8px;
-      height: 140px;
-      overflow-y: auto;
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .message { margin-bottom: 6px; }
-
-    .bubble {
-      padding: 6px 8px;
-      border-radius: 10px;
-      line-height: 1.4;
-      white-space: pre-wrap;
-      max-width: 100%;
-      font-size: 12px;
-    }
-
-    .message.bot .bubble { background: #111827; color: #e5e7eb; }
-    .message.user .bubble { background: #2563eb; color: #e5e7eb; }
-
-    .chat-form { display: flex; gap: 6px; }
-
-    .chat-input {
+    /* MAIN */
+    main.app-main {
       flex: 1;
-      border-radius: 999px;
-      border: 1px solid #4b5563;
-      background: #020617;
-      color: var(--text-main);
-      font-size: 12px;
-      padding: 6px 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "right"
+        "bottom";
+      row-gap: 12px;
+      padding: 14px 24px 12px;
+      min-height: 0;
     }
 
-    .chat-input::placeholder { color: #6b7280; }
-
-    .chat-send {
-      border-radius: 999px;
-      border: none;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 500;
-      background: #3b82f6;
-      color: #ffffff;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .chat-send:hover {
-      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.55);
-      transform: translateY(-0.5px);
-    }
-
-    /* RIGHT AREA */
     .right-area {
       grid-area: right;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      min-height: 0;
     }
 
     .map-container {
       position: relative;
       flex: 1;
+      min-height: 0;
       border-radius: 16px;
       overflow: hidden;
       border: 1px solid #374151;
@@ -243,6 +254,7 @@
       display: flex;
       gap: 10px;
       height: 100%;
+      min-height: 0;
     }
 
     .map-panel {
@@ -253,6 +265,7 @@
       overflow: hidden;
       border: 1px solid #111827;
       background: #020617;
+      min-height: 0;
     }
 
     .map-panel-header {
@@ -262,9 +275,16 @@
       border-bottom: 1px solid #111827;
     }
 
-    .map-inner { flex: 1; }
+    .map-inner {
+      flex: 1;
+      min-height: 0;
+    }
 
-    #mapA, #mapB { width: 100%; height: 100%; }
+    #mapA, #mapB {
+      width: 100%;
+      height: 100%;
+      min-height: 500px;
+    }
 
     .map-overlay-badge {
       position: absolute;
@@ -281,7 +301,6 @@
       pointer-events: none;
     }
 
-    /* Dynamic World legend */
     .map-legend {
       position: absolute;
       bottom: 10px;
@@ -326,13 +345,14 @@
 
     /* REPORT STRIP */
     .report-analysis {
+      grid-area: bottom;
       background: var(--bg-bottom);
       border-radius: 12px;
       border: 1px solid var(--border-subtle);
       padding: 10px 14px;
       font-size: 11px;
       display: grid;
-      grid-template-columns: 160px 210px 160px minmax(0, 1fr);
+      grid-template-columns: 180px 220px 160px minmax(0, 1fr);
       gap: 14px;
       align-items: center;
     }
@@ -349,11 +369,62 @@
     .report-value.link { color: #38bdf8; }
     .report-text { font-size: 11px; color: var(--text-muted); }
 
+    /* Hidden old chat history area if needed for logic */
+    .chat-messages-hidden {
+      display: none;
+    }
+
+    @media (max-width: 1024px) {
+      .top-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .top-filters {
+        width: 100%;
+      }
+
+      .field-group {
+        flex: 1 1 160px;
+      }
+    }
+
     @media (max-width: 900px) {
-      .map-grid { flex-direction: column; }
+      .map-grid {
+        flex-direction: column;
+      }
+
       .report-analysis {
         grid-template-columns: 1fr 1fr;
         row-gap: 8px;
+      }
+
+      #mapA, #mapB {
+        min-height: 320px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .assistant-search-wrap {
+        flex-wrap: wrap;
+        border-radius: 18px;
+      }
+
+      .assistant-search-btn {
+        width: 100%;
+      }
+
+      .year-row {
+        flex-direction: column;
+      }
+
+      .report-analysis {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -361,45 +432,61 @@
 <body>
   <div class="app-shell">
     <header class="top-bar">
-      <div class="top-brand">
-        <div class="top-brand-title">EarthMonitor</div>
-        <div class="top-brand-subtitle">Real-time environmental monitoring</div>
+      <div class="top-head">
+        <div class="top-brand">
+          <div class="top-brand-title">EarthMonitor</div>
+          <div class="top-brand-subtitle">Real-time environmental monitoring</div>
+        </div>
+        <div class="top-right-text">
+          Dynamic World · Google Earth Engine · OpenAI Assistant
+        </div>
       </div>
-      <div class="top-right-text">
-        Dynamic World · Google Earth Engine · OpenAI Assistant
-      </div>
-    </header>
 
-    <main class="app-main">
-      <!-- LEFT SIDEBAR -->
-      <aside class="sidebar">
-        <section class="monitor-box">
-          <div class="monitor-title">Monitor Functions</div>
-          <div class="monitor-subtitle">
-            Choose how to explore changes in your region.
+      <!-- CHATBOT AS TOP SEARCH BAR -->
+      <form class="assistant-search-wrap" onsubmit="handleChatSubmit(event)">
+        <input
+          type="text"
+          id="chat-input"
+          class="assistant-search-input"
+          placeholder="Search region or ask the assistant... e.g. Dubai, compare 2020 and 2022, show prediction"
+          autocomplete="off"
+        />
+        <button type="submit" class="assistant-search-btn">Search</button>
+      </form>
+
+      <!-- FUNCTION TABS + FILTERS -->
+      <div class="top-controls">
+        <div class="view-tabs">
+          <label class="view-tab">
+            <input type="radio" name="mode" value="change_detection" checked />
+            <span>Change Detection</span>
+          </label>
+
+          <label class="view-tab">
+            <input type="radio" name="mode" value="single_year" />
+            <span>Single Year Map</span>
+          </label>
+
+          <label class="view-tab">
+            <input type="radio" name="mode" value="timeseries" />
+            <span>Time Series</span>
+          </label>
+
+          <label class="view-tab">
+            <input type="radio" name="mode" value="prediction" />
+            <span>Prediction</span>
+          </label>
+        </div>
+
+        <div class="top-filters">
+          <div class="field-group">
+            <label for="city">Region</label>
+            <input id="city" type="text" placeholder="Abu Dhabi, Dubai, Berlin..." />
           </div>
 
-          <div class="monitor-radios">
-            <label class="monitor-radio">
-              <input type="radio" name="mode" value="change_detection" checked />
-              <span>Change Detection</span>
-            </label>
-            <label class="monitor-radio">
-              <input type="radio" name="mode" value="single_year" />
-              <span>Single Year Map</span>
-            </label>
-            <label class="monitor-radio">
-              <input type="radio" name="mode" value="timeseries" />
-              <span>Time Series</span>
-            </label>
-          </div>
-
-          <div class="monitor-divider"></div>
-
-          <label>Years</label>
           <div class="year-row">
-            <div id="yearA-container" style="flex:1;">
-              <small class="field-caption">Year A </small>
+            <div class="year-box" id="yearA-container">
+              <small>Year A</small>
               <select id="yearA">
                 <option>2017</option>
                 <option>2018</option>
@@ -411,8 +498,9 @@
                 <option>2024</option>
               </select>
             </div>
-            <div id="yearB-container" style="flex:1;">
-              <small class="field-caption">Year B </small>
+
+            <div class="year-box" id="yearB-container">
+              <small>Year B</small>
               <select id="yearB">
                 <option>2017</option>
                 <option>2018</option>
@@ -425,45 +513,11 @@
               </select>
             </div>
           </div>
+        </div>
+      </div>
+    </header>
 
-          <div class="monitor-divider"></div>
-
-          <label for="city">Region (city name)</label>
-          <input id="city" type="text" placeholder="Abu Dhabi, Dubai, Berlin..." />
-          <div class="field-caption">
-            You can also type: "set location to Dubai" in the chat.
-          </div>
-        </section>
-
-        <section class="chatbot-box">
-          <div class="chatbot-header">
-            <span>Assistant</span>
-            <button type="button" class="chat-toggle" aria-label="Toggle chat">−</button>
-          </div>
-
-          <div class="chat-messages" id="chat-messages">
-            <div class="message bot">
-              <div class="bubble bot">
-                Hi! I can help you explore Dynamic World land cover and describe
-                the changes between your selected years and region.
-              </div>
-            </div>
-          </div>
-
-          <form class="chat-form" onsubmit="handleChatSubmit(event)">
-            <input
-              type="text"
-              id="chat-input"
-              class="chat-input"
-              placeholder="Ask about the map, or say 'set location to Dubai', 'swap years'..."
-              autocomplete="off"
-            />
-            <button type="submit" class="chat-send">Send</button>
-          </form>
-        </section>
-      </aside>
-
-      <!-- RIGHT AREA -->
+    <main class="app-main">
       <div class="right-area">
         <div class="map-container">
           <div class="map-grid">
@@ -471,36 +525,41 @@
               <div class="map-panel-header" id="map-panel-a-label">Before (Year A)</div>
               <div class="map-inner"><div id="mapA"></div></div>
             </div>
+
             <div class="map-panel" id="map-panel-b">
               <div class="map-panel-header" id="map-panel-b-label">After (Year B)</div>
               <div class="map-inner"><div id="mapB"></div></div>
             </div>
           </div>
+
           <div class="map-overlay-badge">Live</div>
           <div class="map-legend" id="map-legend"></div>
         </div>
-
-        <section class="report-analysis">
-          <div>
-            <div class="report-label">Current layer</div>
-            <div class="report-value" id="report-layer">Change Detection</div>
-          </div>
-          <div>
-            <div class="report-label">Selected region</div>
-            <div class="report-value link" id="report-region">Abu Dhabi (example)</div>
-          </div>
-          <div>
-            <div class="report-label">Years</div>
-            <div class="report-value" id="report-years">2020 → 2022</div>
-          </div>
-          <div>
-            <div class="report-label">Summary</div>
-            <div class="report-text" id="report-summary">
-              Change detection report will appear here once you chat with the assistant.
-            </div>
-          </div>
-        </section>
       </div>
+
+      <section class="report-analysis">
+        <div>
+          <div class="report-label">Current layer</div>
+          <div class="report-value" id="report-layer">Change Detection</div>
+        </div>
+        <div>
+          <div class="report-label">Selected region</div>
+          <div class="report-value link" id="report-region">Abu Dhabi (example)</div>
+        </div>
+        <div>
+          <div class="report-label">Years</div>
+          <div class="report-value" id="report-years">2020 → 2022</div>
+        </div>
+        <div>
+          <div class="report-label">Summary</div>
+          <div class="report-text" id="report-summary">
+            Change detection report will appear here once you search with the assistant.
+          </div>
+        </div>
+      </section>
+
+      <!-- hidden chat history store -->
+      <div class="chat-messages-hidden" id="chat-messages"></div>
     </main>
   </div>
 
@@ -513,17 +572,16 @@
   <script>
     const API_BASE = "";
 
-    // Legend data
     const DW_CLASSES = [
-      { label: "Water",               color: "#419bdf" },
-      { label: "Trees",               color: "#397d49" },
-      { label: "Grass",               color: "#88b053" },
-      { label: "Flooded Vegetation",  color: "#7a87c6" },
-      { label: "Crops",               color: "#e49635" },
-      { label: "Shrub & Scrub",       color: "#dfc35a" },
-      { label: "Built Area",          color: "#c4281b" },
-      { label: "Bare Ground",         color: "#a59b8f" },
-      { label: "Snow & Ice",          color: "#b39fe1" },
+      { label: "Water", color: "#419bdf" },
+      { label: "Trees", color: "#397d49" },
+      { label: "Grass", color: "#88b053" },
+      { label: "Flooded Vegetation", color: "#7a87c6" },
+      { label: "Crops", color: "#e49635" },
+      { label: "Shrub & Scrub", color: "#dfc35a" },
+      { label: "Built Area", color: "#c4281b" },
+      { label: "Bare Ground", color: "#a59b8f" },
+      { label: "Snow & Ice", color: "#b39fe1" },
     ];
 
     function buildLegend() {
@@ -546,14 +604,13 @@
       .filter(n => !Number.isNaN(n));
 
     const defaultCenter = [26.3, 55.28];
+    const SAT_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 
-    const SAT_URL  = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-
-    // Base maps (original satellite)
     const satelliteA = L.tileLayer(SAT_URL, {
       attribution: "Esri & others",
       maxZoom: 19
     });
+
     const satelliteB = L.tileLayer(SAT_URL, {
       attribution: "Esri & others",
       maxZoom: 19
@@ -583,16 +640,15 @@
       return r ? r.value : "change_detection";
     }
 
-    // show/hide Year B depending on mode
     function updateYearUIForMode() {
       const mode = currentMode();
       const aBox = document.getElementById("yearA-container");
       const bBox = document.getElementById("yearB-container");
+
       if (mode === "single_year") {
         bBox.style.display = "none";
         aBox.style.flex = "1 1 100%";
-        const yearAVal = document.getElementById("yearA").value;
-        document.getElementById("yearB").value = yearAVal;
+        document.getElementById("yearB").value = document.getElementById("yearA").value;
       } else {
         bBox.style.display = "block";
         aBox.style.flex = "1";
@@ -603,6 +659,7 @@
       if (v === "change_detection") return "Change Detection";
       if (v === "single_year") return "Single Year Map";
       if (v === "timeseries") return "Time Series";
+      if (v === "prediction") return "Prediction";
       return v;
     }
 
@@ -615,7 +672,6 @@
       };
     }
 
-    // Chat → controls (years, mode, location)
     function applyChatTextToControls(text) {
       const t = text.toLowerCase().trim();
       if (!t) return;
@@ -662,8 +718,10 @@
         document.querySelector('input[name="mode"][value="change_detection"]').checked = true;
       } else if (t.includes("time series") || t.includes("timeseries") || t.includes("timeline")) {
         document.querySelector('input[name="mode"][value="timeseries"]').checked = true;
-      } else if (t.includes("single year") || t.includes("only")) {
+      } else if (t.includes("single year") || t.includes("only one year")) {
         document.querySelector('input[name="mode"][value="single_year"]').checked = true;
+      } else if (t.includes("prediction") || t.includes("predict") || t.includes("future")) {
+        document.querySelector('input[name="mode"][value="prediction"]').checked = true;
       }
 
       const found = Array.from(t.matchAll(/\b(19[0-9]{2}|20[0-9]{2})\b/g))
@@ -674,15 +732,12 @@
       if (uniqueYears.length === 1) {
         yearSelectA.value = String(uniqueYears[0]);
         yearSelectB.value = String(uniqueYears[0]);
-        if (currentMode() !== "timeseries") {
+        if (currentMode() !== "timeseries" && currentMode() !== "prediction") {
           document.querySelector('input[name="mode"][value="single_year"]').checked = true;
         }
       } else if (uniqueYears.length >= 2) {
         yearSelectA.value = String(uniqueYears[0]);
         yearSelectB.value = String(uniqueYears[uniqueYears.length - 1]);
-        if (currentMode() === "single_year") {
-          document.querySelector('input[name="mode"][value="change_detection"]').checked = true;
-        }
       }
 
       const locMatch = t.match(/(?:set|change)\s+(?:city|location|region)\s+to\s+(.+)/);
@@ -691,7 +746,12 @@
         return;
       }
 
-      const controlWords = ["year", "map", "mode", "reset", "swap", "change detection", "time series", "single year"];
+      const controlWords = [
+        "year", "map", "mode", "reset", "swap",
+        "change detection", "time series", "single year",
+        "prediction", "predict", "future"
+      ];
+
       const hasControlWord = controlWords.some(w => t.includes(w));
       const hasDigits = /\d/.test(t);
       const wordCount = t.split(/\s+/).filter(Boolean).length;
@@ -741,42 +801,38 @@
           labelA.textContent = `Before (${data.year_a})`;
           labelB.textContent = `After (${data.year_b})`;
 
-          if (tiles.a) {
-            dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
-          }
-          if (tiles.b) {
-            dwLayerB = L.tileLayer(tiles.b, { opacity: 0.9 }).addTo(mapB);
-          }
+          if (tiles.a) dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
+          if (tiles.b) dwLayerB = L.tileLayer(tiles.b, { opacity: 0.9 }).addTo(mapB);
           if (tiles.change) {
             dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.5 }).addTo(mapA);
             dwLayerChangeB = L.tileLayer(tiles.change, { opacity: 0.5 }).addTo(mapB);
           }
-        } else {
+        } else if (mode === "single_year") {
           panelA.style.display = "flex";
           panelB.style.display = "none";
-          labelA.textContent =
-            mode === "single_year"
-              ? `Single year (${data.year_a})`
-              : `Time series (${data.year_a} → ${data.year_b})`;
+          labelA.textContent = `Single year (${data.year_a})`;
 
-          if (mode === "single_year") {
-            if (tiles.a) {
-              dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
-            }
-          } else {
-            if (tiles.a) {
-              dwLayerA = L.tileLayer(tiles.a, { opacity: 0.8 }).addTo(mapA);
-            }
-            if (tiles.b) {
-              dwLayerB = L.tileLayer(tiles.b, { opacity: 0.8 }).addTo(mapA);
-            }
-            if (tiles.change) {
-              dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.7 }).addTo(mapA);
-            }
+          if (tiles.a) dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
+        } else if (mode === "timeseries") {
+          panelA.style.display = "flex";
+          panelB.style.display = "none";
+          labelA.textContent = `Time series (${data.year_a} → ${data.year_b})`;
+
+          if (tiles.a) dwLayerA = L.tileLayer(tiles.a, { opacity: 0.8 }).addTo(mapA);
+          if (tiles.b) dwLayerB = L.tileLayer(tiles.b, { opacity: 0.8 }).addTo(mapA);
+          if (tiles.change) dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.7 }).addTo(mapA);
+        } else if (mode === "prediction") {
+          panelA.style.display = "flex";
+          panelB.style.display = "none";
+          labelA.textContent = `Prediction View`;
+
+          if (tiles.prediction) {
+            dwLayerA = L.tileLayer(tiles.prediction, { opacity: 0.9 }).addTo(mapA);
+          } else if (tiles.change) {
+            dwLayerA = L.tileLayer(tiles.change, { opacity: 0.9 }).addTo(mapA);
           }
         }
 
-        // layer controls: Original Satellite / Dynamic World / Change Detection
         if (layerControlA) mapA.removeControl(layerControlA);
         const baseA = { "Original Satellite": satelliteA };
         const overlaysA = {};
@@ -798,15 +854,20 @@
           }
         }
 
-        document.getElementById("report-layer").textContent = modeToLabel(data.mode);
-        document.getElementById("report-region").textContent = data.city;
-        document.getElementById("report-years").textContent =
-          data.year_a + " → " + data.year_b;
+        document.getElementById("report-layer").textContent = modeToLabel(data.mode || mode);
+        document.getElementById("report-region").textContent = data.city || state.city || "Unknown region";
+        document.getElementById("report-years").textContent = `${data.year_a ?? state.year_a} → ${data.year_b ?? state.year_b}`;
+
+        if (mode === "prediction" && !data.summary) {
+          document.getElementById("report-summary").textContent =
+            "Prediction layer selected. Connect your backend prediction output to show forecasted land-cover change.";
+        }
 
         setTimeout(() => {
           mapA.invalidateSize();
           mapB.invalidateSize();
         }, 200);
+
       } catch (err) {
         console.error("Error calling /map-config", err);
       }
@@ -815,16 +876,14 @@
     document.getElementById("yearA").addEventListener("change", loadMapFromBackend);
     document.getElementById("yearB").addEventListener("change", loadMapFromBackend);
     document.getElementById("city").addEventListener("blur", loadMapFromBackend);
-    document
-      .querySelectorAll('input[name="mode"]')
-      .forEach(r =>
-        r.addEventListener("change", () => {
-          updateYearUIForMode();
-          loadMapFromBackend();
-        })
-      );
 
-    // Initial load
+    document.querySelectorAll('input[name="mode"]').forEach(r =>
+      r.addEventListener("change", () => {
+        updateYearUIForMode();
+        loadMapFromBackend();
+      })
+    );
+
     updateYearUIForMode();
     loadMapFromBackend();
 
@@ -832,12 +891,8 @@
       const container = document.getElementById("chat-messages");
       const msg = document.createElement("div");
       msg.className = "message " + role;
-      const bubble = document.createElement("div");
-      bubble.className = "bubble " + role;
-      bubble.textContent = text;
-      msg.appendChild(bubble);
+      msg.textContent = text;
       container.appendChild(msg);
-      container.scrollTop = container.scrollHeight;
     }
 
     async function handleChatSubmit(e) {
@@ -869,7 +924,8 @@
 
         if (!res.ok) {
           console.error("Chat error", await res.text());
-          appendMessage("bot", "Sorry, something went wrong talking to the backend.");
+          document.getElementById("report-summary").textContent =
+            "Sorry, something went wrong talking to the backend.";
           return;
         }
 
@@ -878,10 +934,13 @@
 
         if (data.summary) {
           document.getElementById("report-summary").textContent = data.summary;
+        } else if (data.reply) {
+          document.getElementById("report-summary").textContent = data.reply;
         }
       } catch (err) {
         console.error("Error calling /chat", err);
-        appendMessage("bot", "Sorry, I couldn't reach the server.");
+        document.getElementById("report-summary").textContent =
+          "Sorry, I couldn't reach the server.";
       }
 
       input.value = "";
