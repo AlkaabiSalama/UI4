@@ -43,12 +43,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/")
 def serve_frontend():
-    return FileResponse("static/index.html")
+    return FileResponse("index.html")
 
 
 # ---------------------------------------------------------------------
