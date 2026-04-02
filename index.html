@@ -2,949 +2,394 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>EarthMonitor – Dynamic World Change Detection</title>
+  <title>EarthMonitor – Dynamic World</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
   />
 
   <style>
     :root {
-      --bg-main: #111827;
-      --bg-nav: #111827;
-      --bg-panel: #1f2933;
-      --bg-bottom: #111827;
-      --border-subtle: #374151;
+      --bg: #111827;
+      --panel: #1f2933;
+      --border: #374151;
       --accent: #3b82f6;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --text-soft: #9ca3af;
-      --chip-bg: #0f172a;
-      --chip-active: #2563eb;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { box-sizing: border-box; margin:0; padding:0; }
 
-    html, body {
-      height: 100%;
-      background: radial-gradient(circle at top left, #111827, #020617);
-      color: var(--text-main);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    body {
+      font-family: system-ui;
+      background: radial-gradient(circle,#111827,#020617);
+      color: var(--text);
     }
 
-    body { display: flex; justify-content: center; }
-
-    .app-shell {
-      width: 100%;
-      max-width: 1380px;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+    header {
+      padding: 16px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
     }
 
-    /* TOP BAR */
-    header.top-bar {
-      background: var(--bg-nav);
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      padding: 16px 24px 14px;
+    h1 { font-size:26px; }
+
+    .layout {
+      display:grid;
+      grid-template-columns:280px 1fr;
+      height: calc(100vh - 70px);
     }
 
-    .top-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
+    /* sidebar */
+    .sidebar {
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
     }
 
-    .top-brand {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    .box {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
     }
 
-    .top-brand-title {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
+    .chat-messages {
+      height:140px;
+      overflow-y:auto;
+      border:1px solid var(--border);
+      margin:6px 0;
+      padding:6px;
+      background:#020617;
     }
 
-    .top-brand-subtitle {
-      font-size: 12px;
-      color: var(--text-soft);
+    .bubble {
+      padding:6px;
+      margin-bottom:6px;
+      border-radius:8px;
+      font-size:12px;
     }
 
-    .top-right-text {
-      font-size: 11px;
-      color: var(--text-soft);
-      white-space: nowrap;
+    .bot { background:#111827; }
+    .user { background:#2563eb; }
+
+    .row { display:flex; gap:6px; }
+
+    select, input {
+      width:100%;
+      padding:6px;
+      background:#020617;
+      border:1px solid var(--border);
+      color:white;
+      border-radius:6px;
     }
 
-    /* TOP SEARCH BAR */
-    .assistant-search-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #0b1220;
-      border: 1px solid #334155;
-      border-radius: 999px;
-      padding: 8px 10px 8px 16px;
-      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+    button {
+      background:var(--accent);
+      border:none;
+      color:white;
+      padding:6px 10px;
+      border-radius:20px;
+      cursor:pointer;
     }
 
-    .assistant-search-input {
-      flex: 1;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--text-main);
-      font-size: 14px;
-      min-width: 200px;
-    }
-
-    .assistant-search-input::placeholder {
-      color: #6b7280;
-    }
-
-    .assistant-search-btn {
-      border-radius: 999px;
-      border: none;
-      padding: 10px 18px;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .assistant-search-btn:hover {
-      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.55);
-      transform: translateY(-0.5px);
-    }
-
-    /* PAGE VIEW / FUNCTION TABS */
-    .top-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-    }
-
-    .view-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .view-tab {
-      position: relative;
-    }
-
-    .view-tab input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .view-tab span {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid #334155;
-      background: var(--chip-bg);
-      color: var(--text-main);
-      font-size: 13px;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .view-tab input[type="radio"]:checked + span {
-      background: var(--chip-active);
-      border-color: #3b82f6;
-      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
-    }
-
-    .top-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: end;
-    }
-
-    .field-group {
-      min-width: 140px;
-    }
-
-    .field-group label,
-    .year-box small {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .year-row {
-      display: flex;
-      gap: 10px;
-      align-items: end;
-    }
-
-    select, input[type="text"] {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid #4b5563;
-      background: #020617;
-      color: var(--text-main);
-      font-size: 12px;
-      padding: 9px 10px;
-      outline: none;
-    }
-
-    select:focus, input[type="text"]:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
-    }
-
-    /* MAIN */
-    main.app-main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: minmax(0, 1fr) auto;
-      grid-template-areas:
-        "right"
-        "bottom";
-      row-gap: 12px;
-      padding: 14px 24px 12px;
-      min-height: 0;
-    }
-
-    .right-area {
-      grid-area: right;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 0;
-    }
-
-    .map-container {
-      position: relative;
-      flex: 1;
-      min-height: 0;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid #374151;
-      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.75);
-      background: #020617;
-      padding: 10px;
+    /* map */
+    .map-area {
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
 
     .map-grid {
-      display: flex;
-      gap: 10px;
-      height: 100%;
-      min-height: 0;
+      display:flex;
+      gap:10px;
+      flex:1;
     }
 
-    .map-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #111827;
-      background: #020617;
-      min-height: 0;
+    .map-box {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      border:1px solid var(--border);
+      border-radius:10px;
+      overflow:hidden;
     }
 
-    .map-panel-header {
-      font-size: 11px;
-      color: var(--text-muted);
-      padding: 4px 8px;
-      border-bottom: 1px solid #111827;
+    .map-header {
+      font-size:12px;
+      padding:4px;
+      border-bottom:1px solid var(--border);
     }
 
-    .map-inner {
-      flex: 1;
-      min-height: 0;
+    .map {
+      flex:1;
     }
 
-    #mapA, #mapB {
-      width: 100%;
-      height: 100%;
-      min-height: 500px;
+    #mapA,#mapB { height:100%; }
+
+    /* legend */
+    .legend {
+      position:absolute;
+      bottom:10px;
+      right:10px;
+      background:#020617;
+      padding:8px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      z-index:9999;
     }
 
-    .map-overlay-badge {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.9);
-      font-size: 10px;
-      color: #e5e7eb;
-      backdrop-filter: blur(6px);
-      z-index: 9999;
-      pointer-events: none;
+    .legend div { font-size:11px; margin-bottom:2px; }
+
+    .legend span {
+      display:inline-block;
+      width:10px;height:10px;
+      margin-right:4px;
     }
 
-    .map-legend {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      padding: 8px 10px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.97);
-      border: 1px solid #1f2937;
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.8);
-      font-size: 11px;
-      min-width: 150px;
-      z-index: 9999;
-      pointer-events: none;
+    /* report */
+    .report {
+      border:1px solid var(--border);
+      padding:10px;
+      border-radius:10px;
+      font-size:12px;
     }
 
-    .map-legend-title {
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: #e5e7eb;
-    }
-
-    .map-legend-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 3px;
-      color: #e5e7eb;
-    }
-
-    .map-legend-swatch {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-      border: 1px solid #64748b;
-      margin-right: 6px;
-      flex-shrink: 0;
-    }
-
-    .map-legend-label {
-      font-size: 11px;
-      color: #e5e7eb;
-    }
-
-    /* REPORT STRIP */
-    .report-analysis {
-      grid-area: bottom;
-      background: var(--bg-bottom);
-      border-radius: 12px;
-      border: 1px solid var(--border-subtle);
-      padding: 10px 14px;
-      font-size: 11px;
-      display: grid;
-      grid-template-columns: 180px 220px 160px minmax(0, 1fr);
-      gap: 14px;
-      align-items: center;
-    }
-
-    .report-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: var(--text-soft);
-      margin-bottom: 2px;
-    }
-
-    .report-value { font-size: 12px; color: #e5e7eb; }
-    .report-value.link { color: #38bdf8; }
-    .report-text { font-size: 11px; color: var(--text-muted); }
-
-    /* Hidden old chat history area if needed for logic */
-    .chat-messages-hidden {
-      display: none;
-    }
-
-    @media (max-width: 1024px) {
-      .top-controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .top-filters {
-        width: 100%;
-      }
-
-      .field-group {
-        flex: 1 1 160px;
-      }
-    }
-
-    @media (max-width: 900px) {
-      .map-grid {
-        flex-direction: column;
-      }
-
-      .report-analysis {
-        grid-template-columns: 1fr 1fr;
-        row-gap: 8px;
-      }
-
-      #mapA, #mapB {
-        min-height: 320px;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .top-head {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .assistant-search-wrap {
-        flex-wrap: wrap;
-        border-radius: 18px;
-      }
-
-      .assistant-search-btn {
-        width: 100%;
-      }
-
-      .year-row {
-        flex-direction: column;
-      }
-
-      .report-analysis {
-        grid-template-columns: 1fr;
-      }
-    }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="top-bar">
-      <div class="top-head">
-        <div class="top-brand">
-          <div class="top-brand-title">EarthMonitor</div>
-          <div class="top-brand-subtitle">Real-time environmental monitoring</div>
-        </div>
-        <div class="top-right-text">
-          Dynamic World · Google Earth Engine · OpenAI Assistant
-        </div>
-      </div>
 
-      <!-- CHATBOT AS TOP SEARCH BAR -->
-      <form class="assistant-search-wrap" onsubmit="handleChatSubmit(event)">
-        <input
-          type="text"
-          id="chat-input"
-          class="assistant-search-input"
-          placeholder="Search region or ask the assistant... e.g. Dubai, compare 2020 and 2022, show prediction"
-          autocomplete="off"
-        />
-        <button type="submit" class="assistant-search-btn">Search</button>
-      </form>
+<header>
+  <div>
+    <h1>EarthMonitor</h1>
+    <small>Dynamic World monitoring</small>
+  </div>
+</header>
 
-      <!-- FUNCTION TABS + FILTERS -->
-      <div class="top-controls">
-        <div class="view-tabs">
-          <label class="view-tab">
-            <input type="radio" name="mode" value="change_detection" checked />
-            <span>Change Detection</span>
-          </label>
+<div class="layout">
 
-          <label class="view-tab">
-            <input type="radio" name="mode" value="single_year" />
-            <span>Single Year Map</span>
-          </label>
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-          <label class="view-tab">
-            <input type="radio" name="mode" value="timeseries" />
-            <span>Time Series</span>
-          </label>
+<div class="box">
+  <b>Mode</b><br>
+  <label><input type="radio" name="mode" value="change_detection" checked> Change</label><br>
+  <label><input type="radio" name="mode" value="single_year"> Single</label><br>
+  <label><input type="radio" name="mode" value="timeseries"> Time Series</label>
 
-          <label class="view-tab">
-            <input type="radio" name="mode" value="prediction" />
-            <span>Prediction</span>
-          </label>
-        </div>
+  <hr>
 
-        <div class="top-filters">
-          <div class="field-group">
-            <label for="city">Region</label>
-            <input id="city" type="text" placeholder="Abu Dhabi, Dubai, Berlin..." />
-          </div>
-
-          <div class="year-row">
-            <div class="year-box" id="yearA-container">
-              <small>Year A</small>
-              <select id="yearA">
-                <option>2017</option>
-                <option>2018</option>
-                <option>2019</option>
-                <option selected>2020</option>
-                <option>2021</option>
-                <option>2022</option>
-                <option>2023</option>
-                <option>2024</option>
-              </select>
-            </div>
-
-            <div class="year-box" id="yearB-container">
-              <small>Year B</small>
-              <select id="yearB">
-                <option>2017</option>
-                <option>2018</option>
-                <option>2019</option>
-                <option>2020</option>
-                <option>2021</option>
-                <option selected>2022</option>
-                <option>2023</option>
-                <option>2024</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="app-main">
-      <div class="right-area">
-        <div class="map-container">
-          <div class="map-grid">
-            <div class="map-panel" id="map-panel-a">
-              <div class="map-panel-header" id="map-panel-a-label">Before (Year A)</div>
-              <div class="map-inner"><div id="mapA"></div></div>
-            </div>
-
-            <div class="map-panel" id="map-panel-b">
-              <div class="map-panel-header" id="map-panel-b-label">After (Year B)</div>
-              <div class="map-inner"><div id="mapB"></div></div>
-            </div>
-          </div>
-
-          <div class="map-overlay-badge">Live</div>
-          <div class="map-legend" id="map-legend"></div>
-        </div>
-      </div>
-
-      <section class="report-analysis">
-        <div>
-          <div class="report-label">Current layer</div>
-          <div class="report-value" id="report-layer">Change Detection</div>
-        </div>
-        <div>
-          <div class="report-label">Selected region</div>
-          <div class="report-value link" id="report-region">Abu Dhabi (example)</div>
-        </div>
-        <div>
-          <div class="report-label">Years</div>
-          <div class="report-value" id="report-years">2020 → 2022</div>
-        </div>
-        <div>
-          <div class="report-label">Summary</div>
-          <div class="report-text" id="report-summary">
-            Change detection report will appear here once you search with the assistant.
-          </div>
-        </div>
-      </section>
-
-      <!-- hidden chat history store -->
-      <div class="chat-messages-hidden" id="chat-messages"></div>
-    </main>
+  <b>Years</b>
+  <div class="row">
+    <select id="yearA"></select>
+    <select id="yearB"></select>
   </div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <hr>
 
-  <script>
-    const API_BASE = "";
+  <b>City</b>
+  <input id="city" placeholder="Dubai, Berlin..." />
+</div>
 
-    const DW_CLASSES = [
-      { label: "Water", color: "#419bdf" },
-      { label: "Trees", color: "#397d49" },
-      { label: "Grass", color: "#88b053" },
-      { label: "Flooded Vegetation", color: "#7a87c6" },
-      { label: "Crops", color: "#e49635" },
-      { label: "Shrub & Scrub", color: "#dfc35a" },
-      { label: "Built Area", color: "#c4281b" },
-      { label: "Bare Ground", color: "#a59b8f" },
-      { label: "Snow & Ice", color: "#b39fe1" },
-    ];
+<div class="box" id="video-tools" style="display:none;">
+  <button onclick="generateVideo()">Generate Video</button>
+  <div id="video-status"></div>
+  <a id="video-link" style="display:none">Download</a>
+</div>
 
-    function buildLegend() {
-      const legend = document.getElementById("map-legend");
-      const items = DW_CLASSES.map(c => `
-        <div class="map-legend-item">
-          <span class="map-legend-swatch" style="background:${c.color};"></span>
-          <span class="map-legend-label">${c.label}</span>
-        </div>
-      `).join("");
-      legend.innerHTML = `
-        <div class="map-legend-title">Dynamic World</div>
-        ${items}
-      `;
-    }
-    buildLegend();
+<div class="box">
+  <b>Assistant</b>
+  <div class="chat-messages" id="chat"></div>
+  <div class="row">
+    <input id="chatInput">
+    <button onclick="sendChat()">Send</button>
+  </div>
+</div>
 
-    const yearsFromDom = Array.from(document.querySelectorAll("#yearA option"))
-      .map(o => parseInt(o.value, 10))
-      .filter(n => !Number.isNaN(n));
+</div>
 
-    const defaultCenter = [26.3, 55.28];
-    const SAT_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+<!-- MAP AREA -->
+<div class="map-area">
 
-    const satelliteA = L.tileLayer(SAT_URL, {
-      attribution: "Esri & others",
-      maxZoom: 19
-    });
+<div class="map-grid">
+  <div class="map-box">
+    <div class="map-header" id="labelA">Before</div>
+    <div id="mapA" class="map"></div>
+  </div>
+  <div class="map-box" id="boxB">
+    <div class="map-header" id="labelB">After</div>
+    <div id="mapB" class="map"></div>
+  </div>
+</div>
 
-    const satelliteB = L.tileLayer(SAT_URL, {
-      attribution: "Esri & others",
-      maxZoom: 19
-    });
+<div class="legend" id="legend"></div>
 
-    const mapA = L.map("mapA", {
-      center: defaultCenter,
-      zoom: 3,
-      layers: [satelliteA]
-    });
+<div class="report" id="summary">
+  Summary appears here
+</div>
 
-    const mapB = L.map("mapB", {
-      center: defaultCenter,
-      zoom: 3,
-      layers: [satelliteB]
-    });
+</div>
+</div>
 
-    let dwLayerA = null;
-    let dwLayerB = null;
-    let dwLayerChangeA = null;
-    let dwLayerChangeB = null;
-    let layerControlA = null;
-    let layerControlB = null;
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    function currentMode() {
-      const r = document.querySelector('input[name="mode"]:checked');
-      return r ? r.value : "change_detection";
-    }
+<script>
 
-    function updateYearUIForMode() {
-      const mode = currentMode();
-      const aBox = document.getElementById("yearA-container");
-      const bBox = document.getElementById("yearB-container");
+const API_BASE = "";
 
-      if (mode === "single_year") {
-        bBox.style.display = "none";
-        aBox.style.flex = "1 1 100%";
-        document.getElementById("yearB").value = document.getElementById("yearA").value;
-      } else {
-        bBox.style.display = "block";
-        aBox.style.flex = "1";
-      }
-    }
+// populate years
+const years = [2017,2018,2019,2020,2021,2022,2023,2024];
+const yearA = document.getElementById("yearA");
+const yearB = document.getElementById("yearB");
+years.forEach(y=>{
+  yearA.innerHTML+=`<option>${y}</option>`;
+  yearB.innerHTML+=`<option>${y}</option>`;
+});
+yearA.value=2020;
+yearB.value=2022;
 
-    function modeToLabel(v) {
-      if (v === "change_detection") return "Change Detection";
-      if (v === "single_year") return "Single Year Map";
-      if (v === "timeseries") return "Time Series";
-      if (v === "prediction") return "Prediction";
-      return v;
-    }
+// maps
+const sat = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const mapA = L.map("mapA").setView([26,55],4);
+const mapB = L.map("mapB").setView([26,55],4);
 
-    function getUIState() {
-      return {
-        mode: currentMode(),
-        year_a: parseInt(document.getElementById("yearA").value, 10),
-        year_b: parseInt(document.getElementById("yearB").value, 10),
-        city: document.getElementById("city").value || ""
-      };
-    }
+const satA = L.tileLayer(sat).addTo(mapA);
+const satB = L.tileLayer(sat).addTo(mapB);
 
-    function applyChatTextToControls(text) {
-      const t = text.toLowerCase().trim();
-      if (!t) return;
+let layerA,layerB,changeA,changeB;
 
-      const yearSelectA = document.getElementById("yearA");
-      const yearSelectB = document.getElementById("yearB");
-      const cityInput = document.getElementById("city");
+function mode(){
+  return document.querySelector('input[name="mode"]:checked').value;
+}
 
-      const ALL_YEARS = yearsFromDom.length ? yearsFromDom : [2017,2018,2019,2020,2021,2022,2023,2024];
-      const lastIndex = ALL_YEARS.length - 1;
-      const defaultYearA = ALL_YEARS[Math.max(0, lastIndex - 1)];
-      const defaultYearB = ALL_YEARS[lastIndex];
+// legend
+const classes=[
+["Water","#419bdf"],["Trees","#397d49"],["Grass","#88b053"],
+["Flood","#7a87c6"],["Crops","#e49635"],["Shrub","#dfc35a"],
+["Built","#c4281b"],["Bare","#a59b8f"],["Snow","#b39fe1"]
+];
+legend.innerHTML="<b>Dynamic World</b><br>"+classes.map(c=>`<div><span style="background:${c[1]}"></span>${c[0]}</div>`).join("");
 
-      if (t.includes("reset") && (t.includes("map") || t.includes("settings") || t.includes("all"))) {
-        document.querySelector('input[name="mode"][value="change_detection"]').checked = true;
-        yearSelectA.value = String(defaultYearA);
-        yearSelectB.value = String(defaultYearB);
-      }
+// update UI
+function updateUI(){
+  if(mode()=="single_year"){
+    yearB.style.display="none";
+    boxB.style.display="none";
+  } else {
+    yearB.style.display="block";
+    boxB.style.display="block";
+  }
 
-      if ((t.includes("swap") || t.includes("switch") || t.includes("reverse") || t.includes("flip")) && t.includes("year")) {
-        const oldA = yearSelectA.value;
-        const oldB = yearSelectB.value;
-        yearSelectA.value = oldB;
-        yearSelectB.value = oldA;
-      }
+  document.getElementById("video-tools").style.display =
+    mode()=="timeseries"?"block":"none";
+}
 
-      if (t.includes("next year")) {
-        const curB = parseInt(yearSelectB.value, 10);
-        const idx = ALL_YEARS.indexOf(curB);
-        if (idx >= 0 && idx < ALL_YEARS.length - 1) {
-          yearSelectB.value = String(ALL_YEARS[idx + 1]);
-        }
-      }
+// load map
+async function loadMap(){
+  updateUI();
 
-      if (t.includes("previous year") || t.includes("last year")) {
-        const curA = parseInt(yearSelectA.value, 10);
-        const idx = ALL_YEARS.indexOf(curA);
-        if (idx > 0) {
-          yearSelectA.value = String(ALL_YEARS[idx - 1]);
-        }
-      }
+  const res = await fetch("/map-config",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      mode:mode(),
+      year_a:+yearA.value,
+      year_b:+yearB.value,
+      city:city.value
+    })
+  });
 
-      if (t.includes("change detection") || t.includes("change analysis") || t.includes("difference")) {
-        document.querySelector('input[name="mode"][value="change_detection"]').checked = true;
-      } else if (t.includes("time series") || t.includes("timeseries") || t.includes("timeline")) {
-        document.querySelector('input[name="mode"][value="timeseries"]').checked = true;
-      } else if (t.includes("single year") || t.includes("only one year")) {
-        document.querySelector('input[name="mode"][value="single_year"]').checked = true;
-      } else if (t.includes("prediction") || t.includes("predict") || t.includes("future")) {
-        document.querySelector('input[name="mode"][value="prediction"]').checked = true;
-      }
+  const data = await res.json();
 
-      const found = Array.from(t.matchAll(/\b(19[0-9]{2}|20[0-9]{2})\b/g))
-        .map(m => parseInt(m[1], 10))
-        .filter(y => ALL_YEARS.includes(y));
-      const uniqueYears = Array.from(new Set(found)).sort();
+  mapA.setView([data.center_lat,data.center_lon],11);
+  mapB.setView([data.center_lat,data.center_lon],11);
 
-      if (uniqueYears.length === 1) {
-        yearSelectA.value = String(uniqueYears[0]);
-        yearSelectB.value = String(uniqueYears[0]);
-        if (currentMode() !== "timeseries" && currentMode() !== "prediction") {
-          document.querySelector('input[name="mode"][value="single_year"]').checked = true;
-        }
-      } else if (uniqueYears.length >= 2) {
-        yearSelectA.value = String(uniqueYears[0]);
-        yearSelectB.value = String(uniqueYears[uniqueYears.length - 1]);
-      }
+  if(layerA) mapA.removeLayer(layerA);
+  if(layerB) mapB.removeLayer(layerB);
+  if(changeA) mapA.removeLayer(changeA);
+  if(changeB) mapB.removeLayer(changeB);
 
-      const locMatch = t.match(/(?:set|change)\s+(?:city|location|region)\s+to\s+(.+)/);
-      if (locMatch && locMatch[1]) {
-        cityInput.value = locMatch[1].trim();
-        return;
-      }
+  if(data.tiles.a) layerA=L.tileLayer(data.tiles.a).addTo(mapA);
+  if(data.tiles.b) layerB=L.tileLayer(data.tiles.b).addTo(mapB);
+  if(data.tiles.change){
+    changeA=L.tileLayer(data.tiles.change).addTo(mapA);
+    changeB=L.tileLayer(data.tiles.change).addTo(mapB);
+  }
 
-      const controlWords = [
-        "year", "map", "mode", "reset", "swap",
-        "change detection", "time series", "single year",
-        "prediction", "predict", "future"
-      ];
+  labelA.innerText="Year "+data.year_a;
+  labelB.innerText="Year "+data.year_b;
 
-      const hasControlWord = controlWords.some(w => t.includes(w));
-      const hasDigits = /\d/.test(t);
-      const wordCount = t.split(/\s+/).filter(Boolean).length;
+}
 
-      if (!hasControlWord && !hasDigits && wordCount > 0 && wordCount <= 4) {
-        cityInput.value = text.trim();
-      }
-    }
+document.querySelectorAll("input,select").forEach(el=>{
+  el.addEventListener("change",loadMap);
+});
 
-    async function loadMapFromBackend() {
-      const state = getUIState();
+loadMap();
 
-      try {
-        const res = await fetch(`${API_BASE}/map-config`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(state),
-        });
+// chat
+function addMsg(role,text){
+  chat.innerHTML+=`<div class="bubble ${role}">${text}</div>`;
+  chat.scrollTop=chat.scrollHeight;
+}
 
-        if (!res.ok) {
-          console.error("Map config error", await res.text());
-          return;
-        }
+async function sendChat(){
+  const text=chatInput.value;
+  addMsg("user",text);
 
-        const data = await res.json();
+  // simple location detection
+  if(text.toLowerCase().includes("dubai")) city.value="Dubai";
+  if(text.toLowerCase().includes("berlin")) city.value="Berlin";
 
-        const center = [data.center_lat, data.center_lon];
-        mapA.setView(center, 11);
-        mapB.setView(center, 11);
+  await loadMap();
 
-        if (dwLayerA) { mapA.removeLayer(dwLayerA); dwLayerA = null; }
-        if (dwLayerChangeA) { mapA.removeLayer(dwLayerChangeA); dwLayerChangeA = null; }
-        if (dwLayerB) { mapB.removeLayer(dwLayerB); dwLayerB = null; }
-        if (dwLayerChangeB) { mapB.removeLayer(dwLayerChangeB); dwLayerChangeB = null; }
+  const res = await fetch("/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      message:text,
+      mode:mode(),
+      year_a:+yearA.value,
+      year_b:+yearB.value,
+      city:city.value
+    })
+  });
 
-        const tiles = data.tiles || {};
-        const mode = state.mode;
+  const data = await res.json();
+  addMsg("bot",data.reply);
+  summary.innerText=data.summary;
 
-        const panelA = document.getElementById("map-panel-a");
-        const panelB = document.getElementById("map-panel-b");
-        const labelA = document.getElementById("map-panel-a-label");
-        const labelB = document.getElementById("map-panel-b-label");
+  chatInput.value="";
+}
 
-        if (mode === "change_detection") {
-          panelA.style.display = "flex";
-          panelB.style.display = "flex";
-          labelA.textContent = `Before (${data.year_a})`;
-          labelB.textContent = `After (${data.year_b})`;
+// video
+async function generateVideo(){
+  video-status.innerText="Generating...";
+  const res = await fetch("/timeseries-video",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      year_a:+yearA.value,
+      year_b:+yearB.value,
+      city:city.value
+    })
+  });
 
-          if (tiles.a) dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
-          if (tiles.b) dwLayerB = L.tileLayer(tiles.b, { opacity: 0.9 }).addTo(mapB);
-          if (tiles.change) {
-            dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.5 }).addTo(mapA);
-            dwLayerChangeB = L.tileLayer(tiles.change, { opacity: 0.5 }).addTo(mapB);
-          }
-        } else if (mode === "single_year") {
-          panelA.style.display = "flex";
-          panelB.style.display = "none";
-          labelA.textContent = `Single year (${data.year_a})`;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
 
-          if (tiles.a) dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9 }).addTo(mapA);
-        } else if (mode === "timeseries") {
-          panelA.style.display = "flex";
-          panelB.style.display = "none";
-          labelA.textContent = `Time series (${data.year_a} → ${data.year_b})`;
+  video-link.href=url;
+  video-link.style.display="block";
+  video-link.innerText="Download video";
 
-          if (tiles.a) dwLayerA = L.tileLayer(tiles.a, { opacity: 0.8 }).addTo(mapA);
-          if (tiles.b) dwLayerB = L.tileLayer(tiles.b, { opacity: 0.8 }).addTo(mapA);
-          if (tiles.change) dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.7 }).addTo(mapA);
-        } else if (mode === "prediction") {
-          panelA.style.display = "flex";
-          panelB.style.display = "none";
-          labelA.textContent = `Prediction View`;
+  video-status.innerText="Done";
+}
 
-          if (tiles.prediction) {
-            dwLayerA = L.tileLayer(tiles.prediction, { opacity: 0.9 }).addTo(mapA);
-          } else if (tiles.change) {
-            dwLayerA = L.tileLayer(tiles.change, { opacity: 0.9 }).addTo(mapA);
-          }
-        }
-
-        if (layerControlA) mapA.removeControl(layerControlA);
-        const baseA = { "Original Satellite": satelliteA };
-        const overlaysA = {};
-        if (dwLayerA) overlaysA["Dynamic World"] = dwLayerA;
-        if (dwLayerChangeA) overlaysA["Change Detection"] = dwLayerChangeA;
-        layerControlA = L.control.layers(baseA, overlaysA, { position: "topleft" }).addTo(mapA);
-
-        if (mode === "change_detection") {
-          if (layerControlB) mapB.removeControl(layerControlB);
-          const baseB = { "Original Satellite": satelliteB };
-          const overlaysB = {};
-          if (dwLayerB) overlaysB["Dynamic World"] = dwLayerB;
-          if (dwLayerChangeB) overlaysB["Change Detection"] = dwLayerChangeB;
-          layerControlB = L.control.layers(baseB, overlaysB, { position: "topleft" }).addTo(mapB);
-        } else {
-          if (layerControlB) {
-            mapB.removeControl(layerControlB);
-            layerControlB = null;
-          }
-        }
-
-        document.getElementById("report-layer").textContent = modeToLabel(data.mode || mode);
-        document.getElementById("report-region").textContent = data.city || state.city || "Unknown region";
-        document.getElementById("report-years").textContent = `${data.year_a ?? state.year_a} → ${data.year_b ?? state.year_b}`;
-
-        if (mode === "prediction" && !data.summary) {
-          document.getElementById("report-summary").textContent =
-            "Prediction layer selected. Connect your backend prediction output to show forecasted land-cover change.";
-        }
-
-        setTimeout(() => {
-          mapA.invalidateSize();
-          mapB.invalidateSize();
-        }, 200);
-
-      } catch (err) {
-        console.error("Error calling /map-config", err);
-      }
-    }
-
-    document.getElementById("yearA").addEventListener("change", loadMapFromBackend);
-    document.getElementById("yearB").addEventListener("change", loadMapFromBackend);
-    document.getElementById("city").addEventListener("blur", loadMapFromBackend);
-
-    document.querySelectorAll('input[name="mode"]').forEach(r =>
-      r.addEventListener("change", () => {
-        updateYearUIForMode();
-        loadMapFromBackend();
-      })
-    );
-
-    updateYearUIForMode();
-    loadMapFromBackend();
-
-    function appendMessage(role, text) {
-      const container = document.getElementById("chat-messages");
-      const msg = document.createElement("div");
-      msg.className = "message " + role;
-      msg.textContent = text;
-      container.appendChild(msg);
-    }
-
-    async function handleChatSubmit(e) {
-      e.preventDefault();
-      const input = document.getElementById("chat-input");
-      const text = input.value.trim();
-      if (!text) return;
-
-      appendMessage("user", text);
-
-      applyChatTextToControls(text);
-      updateYearUIForMode();
-      await loadMapFromBackend();
-
-      const state = getUIState();
-
-      try {
-        const res = await fetch(`${API_BASE}/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: text,
-            mode: state.mode,
-            year_a: state.year_a,
-            year_b: state.year_b,
-            city: state.city,
-          }),
-        });
-
-        if (!res.ok) {
-          console.error("Chat error", await res.text());
-          document.getElementById("report-summary").textContent =
-            "Sorry, something went wrong talking to the backend.";
-          return;
-        }
-
-        const data = await res.json();
-        appendMessage("bot", data.reply || "(empty reply)");
-
-        if (data.summary) {
-          document.getElementById("report-summary").textContent = data.summary;
-        } else if (data.reply) {
-          document.getElementById("report-summary").textContent = data.reply;
-        }
-      } catch (err) {
-        console.error("Error calling /chat", err);
-        document.getElementById("report-summary").textContent =
-          "Sorry, I couldn't reach the server.";
-      }
-
-      input.value = "";
-    }
-  </script>
+</script>
 </body>
 </html>
