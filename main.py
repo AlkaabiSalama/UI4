@@ -27,7 +27,7 @@ from config import (
     LOCATION_NAME,
     CLASS_PALETTE,
 )
-from gee_utils import get_dw_tile_urls, get_latest_global_dw_tile_url, get_prediction_tile_urls
+from gee_utils import get_dw_tile_urls, get_global_latest_tile_url, global_latest_period_caption
 from chat_utils import ask_chatbot
 
 # ---------------------------------------------------------------------
@@ -247,35 +247,34 @@ def map_config(req: MapRequest):
     city_name, lat, lon = resolve_city(req.city)
     location_point = ee.Geometry.Point([lon, lat])
 
-    latest_period: Optional[str] = None
-    zoom: Optional[int] = None
-    center_lat = lat
-    center_lon = lon
+    if mode == "global_latest":
+        url = get_global_latest_tile_url()
+        return {
+            "city": "Global",
+            "center_lat": 15.0,
+            "center_lon": 0.0,
+            "year_a": year_a,
+            "year_b": year_b,
+            "mode": mode,
+            "tiles": {"a": url, "b": None, "change": None},
+            "map_zoom": 2,
+            "global_latest_label": global_latest_period_caption(),
+        }
 
-    if mode == "global_home":
-        tiles, latest_period = get_latest_global_dw_tile_url()
-        center_lat = 15.0
-        center_lon = 10.0
-        zoom = 2
-    elif mode == "single_year":
+    if mode == "single_year":
         tiles = get_dw_tile_urls(location_point, year_a, year_a)
-    elif mode == "prediction":
-        tiles = get_prediction_tile_urls(location_point, year_a, year_b)
     else:
         tiles = get_dw_tile_urls(location_point, year_a, year_b)
 
-    payload = {
+    return {
         "city": city_name,
-        "center_lat": center_lat,
-        "center_lon": center_lon,
+        "center_lat": lat,
+        "center_lon": lon,
         "year_a": year_a,
         "year_b": year_b,
         "mode": mode,
         "tiles": tiles,
-        "latest_period": latest_period,
-        "zoom": zoom,
     }
-    return payload
 
 
 # ---------------------------------------------------------------------
@@ -290,8 +289,11 @@ def chat(req: ChatRequest):
         "content": (
             "You are a helpful assistant that explains Dynamic World land cover "
             "maps and changes over time in SIMPLE language. "
-            "The app has modes: global_home (world latest Dynamic World), change_detection, "
-            "single_year, timeseries, prediction (heuristic recent vs baseline). "
+            "The app has modes: global_latest (world map, recent Dynamic World mosaic), "
+            "change_detection, single_year, timeseries, prediction. "
+            "In prediction mode the map shows the same historical A/B/change layers as time series; "
+            "your job is to discuss plausible future land-cover outcomes qualitatively, "
+            "not as a numerical forecast, unless the user asks for general education. "
             f"Current mode: {req.mode}, years: {req.year_a}–{req.year_b}. "
             f"Current region: {city_name} at ({lat:.3f}, {lon:.3f}). "
             "Return your answer STRICTLY as JSON with two keys: "
