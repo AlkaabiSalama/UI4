@@ -34,8 +34,9 @@
     }
 
     html, body {
-      height: 100%;
-      overflow: hidden;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
       background: #020617;
       color: var(--text-main);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -48,7 +49,6 @@
 
     .app-root {
       width: 100%;
-      height: 100dvh;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -499,8 +499,8 @@
 
     /* —— Full-screen map stage —— */
     .map-stage {
-      flex: 1;
-      min-height: 0;
+      height: calc(100dvh - 220px);
+      min-height: 420px;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -783,6 +783,7 @@
       border-radius: 14px;
       border: 1px solid var(--border-subtle);
       padding: 10px 12px;
+      margin: 10px;
       font-size: 11px;
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -803,6 +804,7 @@
       .report-analysis {
         grid-template-columns: 140px 160px 120px minmax(0, 1fr);
         max-height: none;
+        margin: 12px;
       }
     }
 
@@ -1049,45 +1051,45 @@
         <div class="map-legend" id="map-legend"></div>
       </div>
 
-      <section class="report-analysis" id="report-analysis" hidden>
-        <div>
-          <div class="report-label">Current layer</div>
-          <div class="report-value" id="report-layer">Home</div>
-        </div>
-        <div>
-          <div class="report-label">Selected region</div>
-          <div class="report-value link" id="report-region">World</div>
-        </div>
-        <div>
-          <div class="report-label">Dates</div>
-          <div class="report-value" id="report-dates">—</div>
-        </div>
-        <div>
-          <div class="report-label">Summary</div>
-          <div class="report-text" id="report-summary">
-            Change detection report will appear here once you chat with the assistant.
-          </div>
-        </div>
-        <div class="sample-chart">
-          <div class="sample-chart-title">Example change stats (placeholder)</div>
-          <div class="chart-row">
-            <span class="chart-label">Vegetation loss</span>
-            <div class="chart-bar-wrap"><div class="chart-bar" style="width: 34%;"></div></div>
-            <span class="chart-val">34%</span>
-          </div>
-          <div class="chart-row">
-            <span class="chart-label">Built-up gain</span>
-            <div class="chart-bar-wrap"><div class="chart-bar" style="width: 21%;"></div></div>
-            <span class="chart-val">21%</span>
-          </div>
-          <div class="chart-row">
-            <span class="chart-label">Water shift</span>
-            <div class="chart-bar-wrap"><div class="chart-bar" style="width: 8%;"></div></div>
-            <span class="chart-val">8%</span>
-          </div>
-        </div>
-      </section>
     </main>
+    <section class="report-analysis" id="report-analysis" hidden>
+      <div>
+        <div class="report-label">Current layer</div>
+        <div class="report-value" id="report-layer">Home</div>
+      </div>
+      <div>
+        <div class="report-label">Selected region</div>
+        <div class="report-value link" id="report-region">World</div>
+      </div>
+      <div>
+        <div class="report-label">Dates</div>
+        <div class="report-value" id="report-dates">—</div>
+      </div>
+      <div>
+        <div class="report-label">Summary</div>
+        <div class="report-text" id="report-summary">
+          Change detection report will appear here once you chat with the assistant.
+        </div>
+      </div>
+      <div class="sample-chart">
+        <div class="sample-chart-title">Example change stats (placeholder)</div>
+        <div class="chart-row">
+          <span class="chart-label">Vegetation loss</span>
+          <div class="chart-bar-wrap"><div class="chart-bar" style="width: 34%;"></div></div>
+          <span class="chart-val">34%</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Built-up gain</span>
+          <div class="chart-bar-wrap"><div class="chart-bar" style="width: 21%;"></div></div>
+          <span class="chart-val">21%</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Water shift</span>
+          <div class="chart-bar-wrap"><div class="chart-bar" style="width: 8%;"></div></div>
+          <span class="chart-val">8%</span>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script
