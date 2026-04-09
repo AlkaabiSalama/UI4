@@ -1116,6 +1116,81 @@
       { label: "Snow & Ice", color: "#b39fe1" },
     ];
 
+    const FLOOD_SPOTS = [
+      {
+        name: "Derna floods",
+        country: "Libya",
+        date: "Sep 2023",
+        lat: 32.767,
+        lon: 22.639,
+        severity: "Extreme",
+        note: "Storm Daniel caused dam failures and destructive flash flooding."
+      },
+      {
+        name: "Pakistan monsoon floods",
+        country: "Pakistan",
+        date: "Aug 2022",
+        lat: 26.0,
+        lon: 68.4,
+        severity: "Extreme",
+        note: "Widespread river flooding and long-duration inundation."
+      },
+      {
+        name: "Ahr Valley flood",
+        country: "Germany",
+        date: "Jul 2021",
+        lat: 50.543,
+        lon: 7.1,
+        severity: "High",
+        note: "Record rainfall produced severe flash floods in western Germany."
+      },
+      {
+        name: "Henan flood event",
+        country: "China",
+        date: "Jul 2021",
+        lat: 34.747,
+        lon: 113.625,
+        severity: "High",
+        note: "Urban flooding after extreme rainfall in Zhengzhou and nearby areas."
+      },
+      {
+        name: "Cyclone Idai flooding",
+        country: "Mozambique",
+        date: "Mar 2019",
+        lat: -19.833,
+        lon: 34.85,
+        severity: "Extreme",
+        note: "Coastal surge and inland flooding near Beira after Cyclone Idai."
+      },
+      {
+        name: "Kerala flood event",
+        country: "India",
+        date: "Aug 2018",
+        lat: 10.85,
+        lon: 76.271,
+        severity: "High",
+        note: "Heavy monsoon rainfall caused major flooding and landslides."
+      },
+      {
+        name: "South Brazil floods",
+        country: "Brazil",
+        date: "May 2024",
+        lat: -30.033,
+        lon: -51.23,
+        severity: "High",
+        note: "Historic rainfall in Rio Grande do Sul produced extensive inundation."
+      },
+      {
+        name: "Valencia flood emergency",
+        country: "Spain",
+        date: "Oct 2024",
+        lat: 39.469,
+        lon: -0.376,
+        severity: "Moderate",
+        note: "Mediterranean storm conditions caused localized flood impacts."
+      }
+    ];
+
     function buildLegend() {
       const legend = document.getElementById("map-legend");
       const items = DW_CLASSES.map(c => `
@@ -1171,6 +1246,24 @@
       center: defaultCenter,
       zoom: 3,
       layers: [satelliteB]
+    });
+
+    const floodSpotsLayerA = L.layerGroup();
+    FLOOD_SPOTS.forEach((spot) => {
+      const marker = L.circleMarker([spot.lat, spot.lon], {
+        radius: 6,
+        color: "#0f172a",
+        weight: 1.5,
+        fillColor: "#22d3ee",
+        fillOpacity: 0.9,
+      });
+      marker.bindPopup(
+        `<strong>${spot.name}</strong><br>` +
+        `${spot.country} · ${spot.date}<br>` +
+        `<small>Severity: ${spot.severity}</small><br>` +
+        `<small>${spot.note}</small>`
+      );
+      floodSpotsLayerA.addLayer(marker);
     });
 
     let mapC = null;
@@ -1419,6 +1512,9 @@
           if (tiles.change) {
             dwLayerChangeC = L.tileLayer(tiles.change, { opacity: 0.82, crossOrigin: true }).addTo(mapC);
           }
+          if (mapA.hasLayer(floodSpotsLayerA)) {
+            mapA.removeLayer(floodSpotsLayerA);
+          }
         } else if (mode === "home") {
           mapGridRoot.classList.add("single-map-mode");
           mapGridRoot.classList.remove("has-change-row");
@@ -1438,6 +1534,9 @@
               maxZoom: 19,
               crossOrigin: true,
             }).addTo(mapA);
+          }
+          if (!mapA.hasLayer(floodSpotsLayerA)) {
+            floodSpotsLayerA.addTo(mapA);
           }
         } else if (mode === "prediction" || mode === "timeseries") {
           mapGridRoot.classList.add("single-map-mode");
@@ -1461,6 +1560,9 @@
           if (tiles.change) {
             dwLayerChangeA = L.tileLayer(tiles.change, { opacity: 0.7, crossOrigin: true }).addTo(mapA);
           }
+          if (mapA.hasLayer(floodSpotsLayerA)) {
+            mapA.removeLayer(floodSpotsLayerA);
+          }
         }
 
         if (layerControlA) mapA.removeControl(layerControlA);
@@ -1469,6 +1571,7 @@
         if (dwLayerA) overlaysA["Dynamic World"] = dwLayerA;
         if (dwLayerB && mapA.hasLayer(dwLayerB)) overlaysA["Dynamic World (B)"] = dwLayerB;
         if (dwLayerChangeA) overlaysA["Change Detection"] = dwLayerChangeA;
+        if (mode === "home") overlaysA["Flood disaster spots"] = floodSpotsLayerA;
         layerControlA = L.control.layers(baseA, overlaysA, { position: "topleft" }).addTo(mapA);
 
         if (mode === "change_detection") {
@@ -1487,6 +1590,9 @@
             layerControlC = L.control.layers(baseC, overlaysC, { position: "topleft" }).addTo(mapC);
           }
         } else {
+          if (mapA.hasLayer(floodSpotsLayerA)) {
+            mapA.removeLayer(floodSpotsLayerA);
+          }
           if (layerControlB) {
             mapB.removeControl(layerControlB);
             layerControlB = null;
