@@ -862,11 +862,11 @@
               <label>Dates</label>
               <div class="year-row">
                 <div id="dateA-container" style="flex:1;">
-                  <small class="field-caption">Date A (map day on Home)</small>
+                  <small class="field-caption">Date A (calendar year → Dynamic World annual map)</small>
                   <input type="date" id="dateA" min="2018-01-01" />
                 </div>
                 <div id="dateB-container" style="flex:1;">
-                  <small class="field-caption">Date B (compare end)</small>
+                  <small class="field-caption">Date B (second year for compare modes)</small>
                   <input type="date" id="dateB" min="2018-01-01" />
                 </div>
               </div>
@@ -1253,8 +1253,8 @@
         if (mode === "change_detection") {
           panelA.style.display = "flex";
           panelB.style.display = "flex";
-          labelA.textContent = `Before (${data.date_a_display})`;
-          labelB.textContent = `After (${data.date_b_display})`;
+          labelA.textContent = `Before (${data.date_a_display} · Y${data.dw_year_a ?? ""})`;
+          labelB.textContent = `After (${data.date_b_display} · Y${data.dw_year_b ?? ""})`;
 
           if (tiles.a) {
             dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9, crossOrigin: true }).addTo(mapA);
@@ -1271,8 +1271,8 @@
           panelB.style.display = "none";
           labelA.textContent =
             data.city === "World"
-              ? `World · ${data.date_a_display}`
-              : `${data.city} · ${data.date_a_display}`;
+              ? `World · ${data.date_a_display} (DW ${data.dw_year_a ?? ""})`
+              : `${data.city} · ${data.date_a_display} (DW ${data.dw_year_a ?? ""})`;
           if (tiles.a) {
             dwLayerA = L.tileLayer(tiles.a, {
               opacity: 0.92,
@@ -1286,8 +1286,8 @@
           panelB.style.display = "none";
           labelA.textContent =
             mode === "prediction"
-              ? `Prediction · ${data.date_a_display} vs ${data.date_b_display}`
-              : `Time series · ${data.date_a_display} → ${data.date_b_display}`;
+              ? `Prediction · Y${data.dw_year_a ?? ""} vs Y${data.dw_year_b ?? ""}`
+              : `Time series · Y${data.dw_year_a ?? ""} → Y${data.dw_year_b ?? ""}`;
 
           if (tiles.a) {
             dwLayerA = L.tileLayer(tiles.a, { opacity: 0.8, crossOrigin: true }).addTo(mapA);

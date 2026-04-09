@@ -2,10 +2,10 @@
 
 from datetime import date
 
-# Years supported for legacy video/monthly framing (derived from map dates in the UI)
-YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+# Years supported for Dynamic World annual composites and video
+YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
-# Earliest date allowed for Dynamic World day mosaics (collection coverage)
+# Earliest calendar date accepted in the UI (clamp / chat); DW catalog ~2015+
 DW_MIN_DATE = date(2018, 1, 1)
 
 # Default location (used when city is empty or geocoding fails)

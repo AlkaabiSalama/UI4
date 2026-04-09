@@ -1,55 +1,64 @@
 # gee_utils.py
 """
-Google Earth Engine / Dynamic World logic.
+Google Earth Engine / Dynamic World — original-style connection:
 
-Builds per-day label mosaics and XYZ tile URLs for Leaflet.
+- Annual composites (Jan 1 – Dec 31) with per-pixel ``mode()`` on ``label``.
+- Regional maps: ``filterBounds(point)`` (same as your original code).
+- Global Home view: annual composite without ``filterBounds`` (full-world mosaic).
+
+Do not build ``ee.Geometry`` at module import time; only inside these functions
+after ``ee.Initialize()`` has run.
 """
 
-from datetime import date, timedelta
+from datetime import date
 
 import ee
 
-from config import CLASS_PALETTE, DW_MIN_DATE
-
-# Lazy: ee.Geometry must NOT be built at import time — it calls into ee.data before Initialize().
-_world_geom_cached = None
+from config import CLASS_PALETTE
 
 
-def world_geometry() -> ee.Geometry:
-    global _world_geom_cached
-    if _world_geom_cached is None:
-        _world_geom_cached = ee.Geometry.Rectangle([-179.99, -58.0, 179.99, 85.0])
-    return _world_geom_cached
-
-
-def _clamp_date(d: date, max_d: date | None = None) -> date:
-    max_d = max_d or date.today()
-    if d < DW_MIN_DATE:
-        return DW_MIN_DATE
-    if d > max_d:
-        return max_d
-    return d
-
-
-def build_dw_label_for_day(geom: ee.Geometry, day: date):
+def build_dynamic_world_image(point_geom: ee.Geometry, year: int):
     """
-    Per-pixel mode of Dynamic World ``label`` for one calendar day (UTC) inside ``geom``.
+    Dynamic World land cover for one calendar year at a point (original pattern).
     """
-    day = _clamp_date(day)
-    start = day.isoformat()
-    end = (day + timedelta(days=1)).isoformat()
-    dw_image = (
+    start = f"{year}-01-01"
+    end = f"{year}-12-31"
+
+    dw_collection = (
         ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1")
         .filterDate(start, end)
-        .filterBounds(geom)
-        .select("label")
-        .mode()
+        .filterBounds(point_geom)
     )
+
+    dw_image = dw_collection.select("label").mode()
+
     vis_params = {
         "min": 0,
         "max": 8,
         "palette": CLASS_PALETTE,
     }
+
+    return dw_image, vis_params
+
+
+def build_dynamic_world_global_year(year: int):
+    """Annual global label mode (no filterBounds) — for Home / world map."""
+    start = f"{year}-01-01"
+    end = f"{year}-12-31"
+
+    dw_image = (
+        ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1")
+        .filterDate(start, end)
+        .select("label")
+        .mode()
+    )
+
+    vis_params = {
+        "min": 0,
+        "max": 8,
+        "palette": CLASS_PALETTE,
+    }
+
     return dw_image, vis_params
 
 
@@ -62,22 +71,14 @@ def _image_to_tile_url(image: ee.Image, vis_params: dict) -> str | None:
         return None
 
 
-def tile_url_for_day(geom: ee.Geometry, day: date) -> str | None:
-    img, vis = build_dw_label_for_day(geom, day)
-    return _image_to_tile_url(img, vis)
-
-
-def get_dw_tile_urls_for_geometry(geom: ee.Geometry, day_a: date, day_b: date) -> dict:
+def get_dw_tile_urls(point_geom: ee.Geometry, year_a: int, year_b: int) -> dict:
     """
-    Tile URLs for label mosaics on day_a, day_b, and a binary change layer.
+    Tile URLs for year A, year B, and change layer (original pattern).
     """
-    day_a = _clamp_date(day_a)
-    day_b = _clamp_date(day_b)
-
-    img_a, vis = build_dw_label_for_day(geom, day_a)
+    img_a, vis = build_dynamic_world_image(point_geom, year_a)
     url_a = _image_to_tile_url(img_a, vis)
 
-    img_b, _ = build_dw_label_for_day(geom, day_b)
+    img_b, _ = build_dynamic_world_image(point_geom, year_b)
     url_b = _image_to_tile_url(img_b, vis)
 
     change_img = img_a.neq(img_b)
@@ -91,5 +92,13 @@ def get_dw_tile_urls_for_geometry(geom: ee.Geometry, day_a: date, day_b: date) -
     }
 
 
-def regional_geom(point: ee.Geometry, buffer_m: float = 55000.0) -> ee.Geometry:
-    return point.buffer(buffer_m).bounds()
+def tile_url_at_point(point_geom: ee.Geometry, year: int) -> str | None:
+    """Single annual layer at a point (Home with region)."""
+    img, vis = build_dynamic_world_image(point_geom, year)
+    return _image_to_tile_url(img, vis)
+
+
+def tile_url_global_year(year: int) -> str | None:
+    """Single annual global layer (Home / world)."""
+    img, vis = build_dynamic_world_global_year(year)
+    return _image_to_tile_url(img, vis)

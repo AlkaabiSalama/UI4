@@ -28,12 +28,7 @@ from config import (
     CLASS_PALETTE,
     DW_MIN_DATE,
 )
-from gee_utils import (
-    world_geometry,
-    regional_geom,
-    get_dw_tile_urls_for_geometry,
-    tile_url_for_day,
-)
+from gee_utils import get_dw_tile_urls, tile_url_at_point, tile_url_global_year
 from chat_utils import ask_chatbot
 
 # ---------------------------------------------------------------------
@@ -69,16 +64,17 @@ def init_ee():
         return
 
     try:
-        service_account_json = os.environ.get("EE_SERVICE_ACCOUNT_JSON")
+        service_account_json = (os.environ.get("EE_SERVICE_ACCOUNT_JSON") or "").strip()
         if not service_account_json:
             raise RuntimeError(
                 "EE_SERVICE_ACCOUNT_JSON is missing. "
-                "Set it in Render → Environment."
+                "Set it in Render → Environment (full JSON key as one line or escaped)."
             )
 
         info = json.loads(service_account_json)
         email = info["client_email"]
-        project_id = info.get("project_id")
+        # Prefer EE_PROJECT if set (Render/GCP); else project_id inside the key JSON
+        project_id = (os.environ.get("EE_PROJECT") or "").strip() or info.get("project_id")
 
         credentials = ee.ServiceAccountCredentials(email, key_data=service_account_json)
         if project_id:
@@ -88,7 +84,7 @@ def init_ee():
 
         EE_READY = True
         EE_ERROR = None
-        print("Earth Engine initialized successfully.")
+        print("Earth Engine initialized successfully.", "project=", project_id or "(default)")
     except Exception as e:
         EE_READY = False
         EE_ERROR = str(e)
@@ -270,9 +266,17 @@ def map_config(req: MapRequest):
     if db < da:
         da, db = db, da
 
+    # Dynamic World uses annual composites (original app): year from each selected date
+    year_a = da.year
+    year_b = db.year
+    if year_a not in YEARS:
+        year_a = YEARS[0]
+    if year_b not in YEARS:
+        year_b = YEARS[-1]
+
     if mode == "home":
         if not req.city or not str(req.city).strip():
-            url = tile_url_for_day(world_geometry(), da)
+            url = tile_url_global_year(year_a)
             return {
                 "city": "World",
                 "center_lat": 15.0,
@@ -281,6 +285,8 @@ def map_config(req: MapRequest):
                 "date_b": da.isoformat(),
                 "date_a_display": display_date(da),
                 "date_b_display": display_date(da),
+                "dw_year_a": year_a,
+                "dw_year_b": year_a,
                 "mode": mode,
                 "tiles": {"a": url, "b": None, "change": None},
                 "map_zoom": 2,
@@ -288,8 +294,7 @@ def map_config(req: MapRequest):
 
         city_name, lat, lon = resolve_city(req.city)
         point = ee.Geometry.Point([lon, lat])
-        geom = regional_geom(point)
-        url = tile_url_for_day(geom, da)
+        url = tile_url_at_point(point, year_a)
         return {
             "city": city_name,
             "center_lat": lat,
@@ -298,6 +303,8 @@ def map_config(req: MapRequest):
             "date_b": da.isoformat(),
             "date_a_display": display_date(da),
             "date_b_display": display_date(da),
+            "dw_year_a": year_a,
+            "dw_year_b": year_a,
             "mode": mode,
             "tiles": {"a": url, "b": None, "change": None},
             "map_zoom": 11,
@@ -305,8 +312,7 @@ def map_config(req: MapRequest):
 
     city_name, lat, lon = resolve_city(req.city)
     point = ee.Geometry.Point([lon, lat])
-    geom = regional_geom(point)
-    tiles = get_dw_tile_urls_for_geometry(geom, da, db)
+    tiles = get_dw_tile_urls(point, year_a, year_b)
 
     return {
         "city": city_name,
@@ -316,6 +322,8 @@ def map_config(req: MapRequest):
         "date_b": db.isoformat(),
         "date_a_display": display_date(da),
         "date_b_display": display_date(db),
+        "dw_year_a": year_a,
+        "dw_year_b": year_b,
         "mode": mode,
         "tiles": tiles,
     }
@@ -335,7 +343,8 @@ def chat(req: ChatRequest):
         "content": (
             "You are a helpful assistant that explains Dynamic World land cover "
             "maps and changes over time in SIMPLE language. "
-            "The app uses calendar dates (day–month–year) for Dynamic World daily mosaics. "
+            "The app uses dates to pick calendar years; Dynamic World layers are annual composites "
+            "(mode of daily labels over each year), matching the standard Earth Engine recipe. "
             "Modes: home (single map; world view if no region, else zoomed region), "
             "change_detection (two maps, date A vs B), timeseries, prediction. "
             "In prediction mode the map shows the same historical A/B/change layers as time series; "
