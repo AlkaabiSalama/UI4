@@ -1669,19 +1669,19 @@
     }
 
     async function loadChangeDetectionStats(state) {
-      const date1 = String(state.date_a || "");
-      const date2 = String(state.date_b || "");
-      if (!date1 || !date2) {
-        throw new Error("Please select both dates.");
-      }
-      if (new Date(date1) >= new Date(date2)) {
-        throw new Error("Date B must be after Date A.");
-      }
-      const windowDays = Number(state.window_days || 30);
-      if (!Number.isFinite(windowDays) || windowDays < 1 || windowDays > 180) {
-        throw new Error("Window days must be between 1 and 180.");
-      }
       try {
+        const date1 = String(state.date_a || "");
+        const date2 = String(state.date_b || "");
+        if (!date1 || !date2) {
+          throw new Error("Please select both dates.");
+        }
+        if (new Date(date1) >= new Date(date2)) {
+          throw new Error("Date B must be after Date A.");
+        }
+        const windowDays = Number(state.window_days || 30);
+        if (!Number.isFinite(windowDays) || windowDays < 1 || windowDays > 180) {
+          throw new Error("Window days must be between 1 and 180.");
+        }
         const res = await fetch(`${API_BASE}/api/change-detection`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1695,6 +1695,20 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || res.statusText);
         lastChangeStats = data;
+        lastMapData = {
+          mode: "change_detection",
+          city: data.region_label,
+          center_lat: data.leaflet_bounds
+            ? (data.leaflet_bounds[0][0] + data.leaflet_bounds[1][0]) / 2
+            : null,
+          center_lon: data.leaflet_bounds
+            ? (data.leaflet_bounds[0][1] + data.leaflet_bounds[1][1]) / 2
+            : null,
+          date_a: data.before_date,
+          date_b: data.after_date,
+          date_a_display: data.before_date,
+          date_b_display: data.after_date,
+        };
         updateChangeSummary(data);
         changeOverlayA = setBoundedOverlay(mapA, changeOverlayA, data.before_url, data.leaflet_bounds, 0.9);
         changeOverlayB = setBoundedOverlay(mapB, changeOverlayB, data.after_url, data.leaflet_bounds, 0.9);
@@ -1757,8 +1771,126 @@
         '<div class="report-card"><h3>Recommendations</h3>' + recHtml + "</div>";
     }
 
+    function applyChangeModeLayerControls() {
+      if (layerControlA) mapA.removeControl(layerControlA);
+      const baseA = { "Original Satellite": satelliteA };
+      const overlaysA = {};
+      if (dwLayerA) overlaysA["Dynamic World"] = dwLayerA;
+      if (changeOverlayA) overlaysA["Dynamic World"] = changeOverlayA;
+      if (dwLayerB && mapA.hasLayer(dwLayerB)) overlaysA["Dynamic World (B)"] = dwLayerB;
+      if (dwLayerChangeA) overlaysA["Change Detection"] = dwLayerChangeA;
+      layerControlA = L.control.layers(baseA, overlaysA, { position: "topleft" }).addTo(mapA);
+
+      if (layerControlB) mapB.removeControl(layerControlB);
+      const baseB = { "Original Satellite": satelliteB };
+      const overlaysB = {};
+      if (dwLayerB) overlaysB["Dynamic World"] = dwLayerB;
+      if (changeOverlayB) overlaysB["Dynamic World"] = changeOverlayB;
+      layerControlB = L.control.layers(baseB, overlaysB, { position: "topleft" }).addTo(mapB);
+
+      if (layerControlC && mapC) mapC.removeControl(layerControlC);
+      layerControlC = null;
+      if (mapC && satelliteC) {
+        const baseC = { "Original Satellite": satelliteC };
+        const overlaysC = {};
+        if (dwLayerChangeC) overlaysC["Change"] = dwLayerChangeC;
+        if (changeMaskOverlayC) overlaysC["Change mask"] = changeMaskOverlayC;
+        layerControlC = L.control.layers(baseC, overlaysC, { position: "topleft" }).addTo(mapC);
+      }
+    }
+
+    async function loadChangeDetectionMode(state) {
+      try {
+        if (dwLayerA) {
+          mapA.removeLayer(dwLayerA);
+          dwLayerA = null;
+        }
+        if (dwLayerChangeA) {
+          mapA.removeLayer(dwLayerChangeA);
+          dwLayerChangeA = null;
+        }
+        if (dwLayerB) {
+          if (mapA.hasLayer(dwLayerB)) mapA.removeLayer(dwLayerB);
+          if (mapB.hasLayer(dwLayerB)) mapB.removeLayer(dwLayerB);
+          dwLayerB = null;
+        }
+        if (mapC && dwLayerChangeC) {
+          mapC.removeLayer(dwLayerChangeC);
+          dwLayerChangeC = null;
+        }
+        if (changeOverlayA) {
+          mapA.removeLayer(changeOverlayA);
+          changeOverlayA = null;
+        }
+        if (changeOverlayB) {
+          mapB.removeLayer(changeOverlayB);
+          changeOverlayB = null;
+        }
+        if (mapC && changeMaskOverlayC) {
+          mapC.removeLayer(changeMaskOverlayC);
+          changeMaskOverlayC = null;
+        }
+
+        const mapGridRoot = document.getElementById("map-grid-root");
+        const panelA = document.getElementById("map-panel-a");
+        const panelB = document.getElementById("map-panel-b");
+        const panelC = document.getElementById("map-panel-c");
+        const reportPanel = document.getElementById("report-analysis");
+        const labelA = document.getElementById("map-panel-a-label");
+        const labelB = document.getElementById("map-panel-b-label");
+        const labelC = document.getElementById("map-panel-c-label");
+        const chipWrap = document.getElementById("region-chip-wrap");
+        const cityVal = (state.city || "").trim();
+
+        mapGridRoot.classList.remove("single-map-mode");
+        mapGridRoot.classList.add("has-change-row");
+        panelB.hidden = false;
+        panelC.hidden = false;
+        reportPanel.hidden = false;
+        panelA.style.display = "flex";
+        panelB.style.display = "flex";
+
+        if (cityVal) {
+          chipWrap.hidden = false;
+          document.getElementById("region-chip-label").textContent = cityVal;
+        } else {
+          chipWrap.hidden = true;
+        }
+
+        labelA.textContent = "Before · " + state.date_a;
+        labelB.textContent = "After · " + state.date_b;
+        labelC.textContent = "Change mask · " + state.date_a + " → " + state.date_b;
+
+        document.getElementById("report-layer").textContent = "Change Detection";
+        document.getElementById("report-dates").textContent = state.date_a + " → " + state.date_b;
+        document.getElementById("report-region").textContent = cityVal || "—";
+
+        ensureMapC();
+
+        await loadChangeDetectionStats(state);
+
+        applyChangeModeLayerControls();
+
+        if (mapA.hasLayer(floodSpotsLayerA)) {
+          mapA.removeLayer(floodSpotsLayerA);
+        }
+
+        setTimeout(() => {
+          mapA.invalidateSize();
+          mapB.invalidateSize();
+          if (mapC) mapC.invalidateSize();
+        }, 200);
+      } catch (err) {
+        console.error("loadChangeDetectionMode", err);
+      }
+    }
+
     async function loadMapFromBackend() {
       const state = getUIState();
+      if (state.mode === "change_detection") {
+        await loadChangeDetectionMode(state);
+        return;
+      }
 
       try {
         const res = await fetch(`${API_BASE}/map-config`, {
@@ -1826,39 +1958,7 @@
           chipWrap.hidden = true;
         }
 
-        if (mode === "change_detection") {
-          mapGridRoot.classList.remove("single-map-mode");
-          mapGridRoot.classList.add("has-change-row");
-          panelB.hidden = false;
-          panelC.hidden = false;
-          reportPanel.hidden = false;
-          panelA.style.display = "flex";
-          panelB.style.display = "flex";
-          labelA.textContent = `Before (${data.date_a_display} · Y${data.dw_year_a ?? ""})`;
-          labelB.textContent = `After (${data.date_b_display} · Y${data.dw_year_b ?? ""})`;
-          labelC.textContent = `Change: ${data.date_a_display} → ${data.date_b_display}`;
-
-          if (tiles.a) {
-            dwLayerA = L.tileLayer(tiles.a, { opacity: 0.9, crossOrigin: true }).addTo(mapA);
-          }
-          if (tiles.b) {
-            dwLayerB = L.tileLayer(tiles.b, { opacity: 0.9, crossOrigin: true }).addTo(mapB);
-          }
-          ensureMapC();
-          mapC.setView(center, zoom);
-          if (tiles.change) {
-            dwLayerChangeC = L.tileLayer(tiles.change, { opacity: 0.82, crossOrigin: true }).addTo(mapC);
-          }
-          await loadChangeDetectionStats({
-            date_a: data.date_a,
-            date_b: data.date_b,
-            city: (state.city || "").trim() || data.city,
-            window_days: state.window_days,
-          });
-          if (mapA.hasLayer(floodSpotsLayerA)) {
-            mapA.removeLayer(floodSpotsLayerA);
-          }
-        } else if (mode === "home") {
+        if (mode === "home") {
           mapGridRoot.classList.add("single-map-mode");
           mapGridRoot.classList.remove("has-change-row");
           panelB.hidden = true;
@@ -1922,35 +2022,16 @@
         if (mode === "home") overlaysA["Flood disaster spots"] = floodSpotsLayerA;
         layerControlA = L.control.layers(baseA, overlaysA, { position: "topleft" }).addTo(mapA);
 
-        if (mode === "change_detection") {
-          if (layerControlB) mapB.removeControl(layerControlB);
-          const baseB = { "Original Satellite": satelliteB };
-          const overlaysB = {};
-          if (dwLayerB) overlaysB["Dynamic World"] = dwLayerB;
-          if (changeOverlayB) overlaysB["Dynamic World"] = changeOverlayB;
-          layerControlB = L.control.layers(baseB, overlaysB, { position: "topleft" }).addTo(mapB);
-
-          if (layerControlC && mapC) mapC.removeControl(layerControlC);
+        if (mapA.hasLayer(floodSpotsLayerA)) {
+          mapA.removeLayer(floodSpotsLayerA);
+        }
+        if (layerControlB) {
+          mapB.removeControl(layerControlB);
+          layerControlB = null;
+        }
+        if (layerControlC && mapC) {
+          mapC.removeControl(layerControlC);
           layerControlC = null;
-          if (mapC && satelliteC) {
-            const baseC = { "Original Satellite": satelliteC };
-            const overlaysC = {};
-            if (dwLayerChangeC) overlaysC["Change"] = dwLayerChangeC;
-            if (changeMaskOverlayC) overlaysC["Change mask"] = changeMaskOverlayC;
-            layerControlC = L.control.layers(baseC, overlaysC, { position: "topleft" }).addTo(mapC);
-          }
-        } else {
-          if (mapA.hasLayer(floodSpotsLayerA)) {
-            mapA.removeLayer(floodSpotsLayerA);
-          }
-          if (layerControlB) {
-            mapB.removeControl(layerControlB);
-            layerControlB = null;
-          }
-          if (layerControlC && mapC) {
-            mapC.removeControl(layerControlC);
-            layerControlC = null;
-          }
         }
 
         document.getElementById("report-layer").textContent = modeToLabel(data.mode);

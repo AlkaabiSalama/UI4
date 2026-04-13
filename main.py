@@ -484,7 +484,8 @@ def compute_change_detection(
     dw1 = _build_dw_label_image(aoi, date1, window_days)
     dw2 = _build_dw_label_image(aoi, date2, window_days)
 
-    change_mask = dw1.neq(dw2).selfMask().rename("label")
+    # Match ChangeAnalysis.py exactly (band naming + thumbnail size)
+    change_mask = dw1.neq(dw2).selfMask()
     paired = dw1.multiply(100).add(dw2).rename("pair")
     region_info = aoi.getInfo()
     leaflet_bounds = leaflet_bounds_from_geometry_info(region_info)
@@ -494,7 +495,7 @@ def compute_change_detection(
             "min": 0,
             "max": 8,
             "palette": CLASS_PALETTE,
-            "dimensions": 768,
+            "dimensions": 512,
             "region": region_info,
         }
     )
@@ -503,7 +504,7 @@ def compute_change_detection(
             "min": 0,
             "max": 8,
             "palette": CLASS_PALETTE,
-            "dimensions": 768,
+            "dimensions": 512,
             "region": region_info,
         }
     )
@@ -512,7 +513,7 @@ def compute_change_detection(
             "min": 0,
             "max": 1,
             "palette": ["000000", "ff00ff"],
-            "dimensions": 768,
+            "dimensions": 512,
             "region": region_info,
         }
     )
@@ -801,7 +802,7 @@ def build_structured_report(payload: dict) -> Dict[str, Any]:
         },
         "top_transitions": transitions,
         "narrative": narrative,
-        "gpt_used": bool(OPENAI_API_KEY),
+        "gpt_used": bool(OPENAI_API_KEY and "PASTE_YOUR" not in OPENAI_API_KEY),
     }
 
 
