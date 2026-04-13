@@ -777,144 +777,71 @@
       object-fit: contain;
     }
 
-    /* —— Report section below map (change mode only) —— */
-    .report-analysis {
-      background: rgba(15, 23, 42, 0.94);
-      border-radius: 14px;
-      border: 1px solid var(--border-subtle);
-      padding: 10px 12px;
-      margin: 10px;
-      font-size: 11px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 12px;
-      align-items: start;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-      pointer-events: auto;
-      max-height: 32vh;
-      overflow-y: auto;
+    /* —— ChangeAnalysis.py embedded UI (footer summary + report modal) —— */
+    #change-analysis-footer {
+      background: #0c1428;
+      border-top: 1px solid #1e3a5f;
+      padding: 1.15rem 1.5rem;
+      font-size: 0.875rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+      color: #e8eef7;
     }
 
-    .report-analysis[hidden] {
+    #change-analysis-footer[hidden] {
       display: none !important;
     }
 
-    @media (min-width: 900px) {
-      .report-analysis {
-        grid-template-columns: 140px 160px 120px minmax(0, 1fr);
-        max-height: none;
-        margin: 12px;
-      }
-    }
-
-    .report-label {
-      font-size: 9px;
+    #change-analysis-footer strong {
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: var(--text-soft);
-      margin-bottom: 2px;
+      letter-spacing: 0.06em;
+      color: #8b9cb5;
+      display: block;
+      margin-bottom: 0.5rem;
     }
 
-    .report-value {
-      font-size: 12px;
-      color: #e5e7eb;
+    #change-analysis-footer #summary {
+      color: #e8eef7;
+      line-height: 1.45;
     }
 
-    .report-value.link {
-      color: #38bdf8;
+    #change-analysis-footer #summary p {
+      margin: 0 0 0.5rem;
     }
 
-    .report-text {
-      font-size: 11px;
-      color: var(--text-muted);
-      line-height: 1.35;
-      max-height: 8.1em;
-      overflow-y: auto;
+    #change-analysis-footer #summary ul {
+      margin: 0.25rem 0 0;
+      padding-left: 1.1rem;
     }
 
-    .change-metrics {
-      grid-column: 1 / -1;
-      background: rgba(2, 6, 23, 0.58);
-      border: 1px solid rgba(51, 65, 85, 0.92);
+    #change-analysis-footer button.secondary {
+      margin-top: 0.75rem;
+      padding: 0.55rem 1.1rem;
+      background: #2563eb;
+      color: #fff;
+      border: none;
       border-radius: 12px;
-      padding: 10px;
-    }
-
-    .change-metrics-title {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #93c5fd;
-      margin-bottom: 8px;
-    }
-
-    .chart-row {
-      display: grid;
-      grid-template-columns: 110px 1fr auto;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .chart-label {
-      color: #cbd5e1;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    .chart-bar-wrap {
-      height: 10px;
-      border-radius: 999px;
-      background: rgba(51, 65, 85, 0.9);
-      overflow: hidden;
-    }
-
-    .chart-bar {
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #38bdf8, #22c55e);
-    }
-
-    .chart-val {
-      color: #e2e8f0;
-      font-size: 10px;
-      min-width: 36px;
-      text-align: right;
-    }
-
-    .report-actions {
-      grid-column: 1 / -1;
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 2px;
-    }
-
-    .report-btn {
-      border: 1px solid rgba(59, 130, 246, 0.45);
-      background: linear-gradient(180deg, #2563eb, #1d4ed8);
-      color: #e2e8f0;
-      border-radius: 10px;
-      padding: 7px 10px;
-      font-size: 11px;
-      font-weight: 600;
       cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
     }
 
-    .report-btn:hover {
-      filter: brightness(1.06);
+    #change-analysis-footer button.secondary:hover {
+      background: #3b82f6;
     }
 
     #reportBox {
+      display: none;
       position: fixed;
       inset: 0;
-      z-index: 2100;
-      background: rgba(2, 6, 23, 0.72);
-      backdrop-filter: blur(4px);
-      display: none;
+      background: rgba(2, 6, 20, 0.72);
+      z-index: 2000;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 1rem;
+      backdrop-filter: blur(4px);
     }
 
     #reportBox.show {
@@ -922,92 +849,140 @@
     }
 
     #reportInner {
-      width: min(620px, 96vw);
+      background: #0c1428;
+      border: 1px solid #1e3a5f;
+      max-width: 560px;
+      width: 100%;
       max-height: 88vh;
       overflow: auto;
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px solid rgba(51, 65, 85, 0.95);
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+      border-radius: 20px;
+      padding: 1.25rem 1.35rem;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      color: #e8eef7;
     }
 
     .report-top {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 10px;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
     .report-top h2 {
       margin: 0;
-      font-size: 16px;
-      color: #f8fafc;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #e8eef7;
     }
 
     .btn-close {
-      border: 1px solid rgba(100, 116, 139, 0.65);
-      background: rgba(30, 41, 59, 0.95);
-      color: #e2e8f0;
-      border-radius: 8px;
-      padding: 5px 9px;
-      font-size: 11px;
+      flex-shrink: 0;
+      padding: 0.4rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid #1e3a5f;
+      background: #111d3a;
+      color: #e8eef7;
       cursor: pointer;
+      font-size: 0.8rem;
     }
 
-    .report-card {
-      background: rgba(15, 23, 42, 0.92);
-      border: 1px solid rgba(51, 65, 85, 0.95);
-      border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 10px;
+    .btn-close:hover {
+      border-color: #8b9cb5;
     }
 
-    .report-card h3 {
-      margin: 0 0 6px;
-      font-size: 10px;
+    #reportInner .card {
+      background: #111d3a;
+      border: 1px solid #1e3a5f;
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 0.85rem;
+    }
+
+    #reportInner .card h3 {
+      margin: 0 0 0.65rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #93c5fd;
+      letter-spacing: 0.07em;
+      color: #8b9cb5;
+      font-weight: 700;
     }
 
-    .report-card p,
-    .report-card li {
-      font-size: 12px;
-      color: #e2e8f0;
+    #reportInner .card p {
+      margin: 0 0 0.5rem;
       line-height: 1.45;
+      color: #e8eef7;
+      font-size: 0.9rem;
     }
 
-    .report-card ul {
+    #reportInner .card p:last-child {
+      margin-bottom: 0;
+    }
+
+    #reportInner .card ul {
       margin: 0;
-      padding-left: 18px;
+      padding-left: 1.1rem;
+      color: #e8eef7;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    #reportInner .card li {
+      margin-bottom: 0.35rem;
+    }
+
+    .risk-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 9px;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 0.8rem;
       font-weight: 700;
       letter-spacing: 0.04em;
     }
 
-    .badge.low { background: rgba(34, 197, 94, 0.18); color: #86efac; }
-    .badge.med { background: rgba(234, 179, 8, 0.2); color: #fde047; }
-    .badge.high { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-
-    .gpt-note {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 6px;
+    .badge.low {
+      background: rgba(34, 197, 94, 0.18);
+      color: #86efac;
     }
 
-    .report-error {
-      color: #fda4af;
-      font-size: 12px;
+    .badge.med {
+      background: rgba(234, 179, 8, 0.2);
+      color: #fde047;
+    }
+
+    .badge.high {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+
+    .meta-line {
+      font-size: 0.85rem;
+      color: #8b9cb5;
+    }
+
+    .meta-line strong {
+      color: #e8eef7;
+    }
+
+    .gpt-note {
+      font-size: 0.75rem;
+      color: #8b9cb5;
+      margin-top: 0.5rem;
+    }
+
+    .err-box {
+      color: #fca5a5;
+      font-size: 0.875rem;
       white-space: pre-wrap;
     }
 
@@ -1180,47 +1155,11 @@
       </div>
 
     </main>
-    <section class="report-analysis" id="report-analysis" hidden>
-      <div>
-        <div class="report-label">Current layer</div>
-        <div class="report-value" id="report-layer">Home</div>
-      </div>
-      <div>
-        <div class="report-label">Selected region</div>
-        <div class="report-value link" id="report-region">World</div>
-      </div>
-      <div>
-        <div class="report-label">Dates</div>
-        <div class="report-value" id="report-dates">—</div>
-      </div>
-      <div>
-        <div class="report-label">Summary</div>
-        <div class="report-text" id="report-summary">
-          Run change detection to load summary metrics.
-        </div>
-      </div>
-      <div class="change-metrics">
-        <div class="change-metrics-title">Change metrics</div>
-        <div class="chart-row">
-          <span class="chart-label">Changed pixels</span>
-          <div class="chart-bar-wrap"><div class="chart-bar" id="metric-change" style="width: 0%;"></div></div>
-          <span class="chart-val" id="metric-change-val">0%</span>
-        </div>
-        <div class="chart-row">
-          <span class="chart-label">Vegetation loss</span>
-          <div class="chart-bar-wrap"><div class="chart-bar" id="metric-veg" style="width: 0%;"></div></div>
-          <span class="chart-val" id="metric-veg-val">0%</span>
-        </div>
-        <div class="chart-row">
-          <span class="chart-label">Built change</span>
-          <div class="chart-bar-wrap"><div class="chart-bar" id="metric-built" style="width: 0%;"></div></div>
-          <span class="chart-val" id="metric-built-val">0%</span>
-        </div>
-      </div>
-      <div class="report-actions">
-        <button type="button" class="report-btn" id="btnReport">Generate report</button>
-      </div>
-    </section>
+    <footer id="change-analysis-footer" hidden>
+      <strong>Summary Analysis</strong>
+      <div id="summary">Run Generate to load statistics.</div>
+      <button type="button" class="secondary" id="btnReport">Generate Report</button>
+    </footer>
     <div id="reportBox" aria-hidden="true">
       <div id="reportInner">
         <div class="report-top">
@@ -1600,13 +1539,6 @@
       return "high";
     }
 
-    function setBar(id, value) {
-      const bar = document.getElementById(id);
-      if (!bar) return;
-      const num = Math.max(0, Math.min(100, Number(value || 0)));
-      bar.style.width = num.toFixed(2) + "%";
-    }
-
     function setChangeMaskOverlay(url, bounds) {
       if (!mapC) return;
       if (changeMaskOverlayC) {
@@ -1638,34 +1570,53 @@
       return layer;
     }
 
-    function updateChangeSummary(stats) {
-      const summaryEl = document.getElementById("report-summary");
-      if (!stats) {
-        summaryEl.textContent = "Run change detection to load summary metrics.";
-        setBar("metric-change", 0);
-        setBar("metric-veg", 0);
-        setBar("metric-built", 0);
-        document.getElementById("metric-change-val").textContent = "0%";
-        document.getElementById("metric-veg-val").textContent = "0%";
-        document.getElementById("metric-built-val").textContent = "0%";
+    /** Same HTML as ChangeAnalysis.py INDEX_HTML after successful /api/change-detection */
+    function setSummaryFromChangeStats(data) {
+      const summaryEl = document.getElementById("summary");
+      if (!summaryEl) return;
+      if (!data) {
+        summaryEl.textContent = "Run Generate to load statistics.";
         return;
       }
-      const t = stats.top_transitions || [];
-      let summary =
-        "Changed pixels: " + stats.change_percent + "% · Risk: " + (stats.risk_level || "");
-      if (stats.dynamic_world_note) summary += " · " + stats.dynamic_world_note;
-      if (t.length) {
-        const top = t[0];
-        summary += " · Top transition: " + top.from_name + " -> " + top.to_name + " (" + top.percent_of_aoi + "%)";
+      let html = "<p><strong>Region:</strong> " + (data.region_label || "") + "</p>";
+      html +=
+        "<p><strong>Pixels changed:</strong> " +
+        data.change_percent +
+        "% &middot; <strong>Risk:</strong> " +
+        (data.risk_level || "") +
+        "</p>";
+      if (data.water_loss_percent != null) {
+        html +=
+          '<p class="meta-line" style="margin-top:0.35rem;"><strong>Water loss:</strong> ' +
+          data.water_loss_percent +
+          "% &middot; <strong>Vegetation loss:</strong> " +
+          data.vegetation_loss_percent +
+          "% &middot; <strong>Built change:</strong> " +
+          data.built_change_percent +
+          "%</p>";
       }
-      summaryEl.textContent = summary;
+      html += "<p>" + (data.dynamic_world_note || "") + "</p>";
+      if (data.top_transitions && data.top_transitions.length) {
+        html += "<p><strong>Top transitions</strong></p><ul>";
+        data.top_transitions.slice(0, 10).forEach((t) => {
+          html +=
+            "<li>" +
+            t.from_name +
+            " → " +
+            t.to_name +
+            ": " +
+            t.percent_of_aoi +
+            "%</li>";
+        });
+        html += "</ul>";
+      }
+      summaryEl.innerHTML = html;
+    }
 
-      setBar("metric-change", Number(stats.change_percent || 0));
-      setBar("metric-veg", Number(stats.vegetation_loss_percent || 0));
-      setBar("metric-built", Number(stats.built_change_percent || 0));
-      document.getElementById("metric-change-val").textContent = Number(stats.change_percent || 0).toFixed(2) + "%";
-      document.getElementById("metric-veg-val").textContent = Number(stats.vegetation_loss_percent || 0).toFixed(2) + "%";
-      document.getElementById("metric-built-val").textContent = Number(stats.built_change_percent || 0).toFixed(2) + "%";
+    function clearSummaryFromChangeStats() {
+      const summaryEl = document.getElementById("summary");
+      if (!summaryEl) return;
+      summaryEl.textContent = "Run Generate to load statistics.";
     }
 
     async function loadChangeDetectionStats(state) {
@@ -1709,7 +1660,7 @@
           date_a_display: data.before_date,
           date_b_display: data.after_date,
         };
-        updateChangeSummary(data);
+        setSummaryFromChangeStats(data);
         changeOverlayA = setBoundedOverlay(mapA, changeOverlayA, data.before_url, data.leaflet_bounds, 0.9);
         changeOverlayB = setBoundedOverlay(mapB, changeOverlayB, data.after_url, data.leaflet_bounds, 0.9);
         if (dwLayerA && mapA.hasLayer(dwLayerA)) {
@@ -1727,48 +1678,89 @@
           }
           setChangeMaskOverlay(data.change_url, data.leaflet_bounds);
         }
-        if (data.region_label) {
-          document.getElementById("report-region").textContent = data.region_label;
-        }
       } catch (err) {
         lastChangeStats = null;
-        updateChangeSummary(null);
-        document.getElementById("report-summary").textContent = "Error loading change metrics: " + err.message;
+        clearSummaryFromChangeStats();
+        const summaryEl = document.getElementById("summary");
+        if (summaryEl) {
+          summaryEl.textContent = "Error: " + err.message;
+        }
       }
     }
 
     function renderReport(data) {
       const el = document.getElementById("reportContent");
       if (data.detail && !data.metrics) {
-        el.innerHTML = '<div class="report-card report-error">' + escapeHtml(String(data.detail)) + "</div>";
+        el.innerHTML = '<div class="card err-box">' + escapeHtml(String(data.detail)) + "</div>";
         return;
       }
       const m = data.metrics || {};
       const n = data.narrative || {};
       const dr = m.date_range || {};
       const risk = (m.risk_level || "LOW").toUpperCase();
-      const trans = data.top_transitions || [];
+      let trans = data.top_transitions || [];
       let transHtml = "<ul>";
       trans.slice(0, 10).forEach(function (t) {
-        transHtml += "<li>" + escapeHtml(t.from_name) + " -> " + escapeHtml(t.to_name) + ": " + t.percent_of_aoi + "%</li>";
+        transHtml +=
+          "<li>" +
+          escapeHtml(t.from_name) +
+          " → " +
+          escapeHtml(t.to_name) +
+          ": " +
+          t.percent_of_aoi +
+          "%</li>";
       });
       transHtml += "</ul>";
       if (!trans.length) transHtml = '<p class="meta-line">No transition breakdown for this run.</p>';
       const recs = Array.isArray(n.recommendations) ? n.recommendations : [];
       let recHtml = "<ul>";
-      recs.forEach(function (r) { recHtml += "<li>" + escapeHtml(r) + "</li>"; });
+      recs.forEach(function (r) {
+        recHtml += "<li>" + escapeHtml(r) + "</li>";
+      });
       recHtml += "</ul>";
-      const gptNote = data.gpt_used ? "" : '<p class="gpt-note">OpenAI key not set - using built-in summary text.</p>';
+      const gptNote = data.gpt_used
+        ? ""
+        : '<p class="gpt-note">OpenAI key not set — showing built-in summary text.</p>';
       el.innerHTML =
-        '<div class="report-card"><h3>Summary</h3>' +
-        '<p><strong>Region:</strong> ' + escapeHtml(m.region || "") + "</p>" +
-        '<p><strong>Date range:</strong> ' + escapeHtml(dr.start || "") + " -> " + escapeHtml(dr.end || "") + "</p>" +
-        "<p><strong>Area relabeled:</strong> " + (m.change_percent ?? 0) + "%</p>" +
-        '<p><span class="badge ' + riskBadgeClass(risk) + '">' + riskIcon(risk) + " " + risk + "</span></p>" +
-        gptNote + "</div>" +
-        '<div class="report-card"><h3>What changed</h3><p>' + escapeHtml(n.what_changed || "") + "</p>" + transHtml + "</div>" +
-        '<div class="report-card"><h3>Risk meaning</h3><p>' + escapeHtml(n.risk_meaning || "") + "</p></div>" +
-        '<div class="report-card"><h3>Recommendations</h3>' + recHtml + "</div>";
+        '<div class="card"><h3>Summary</h3>' +
+        '<p class="meta-line"><strong>Region:</strong> ' +
+        escapeHtml(m.region || "") +
+        "</p>" +
+        '<p class="meta-line"><strong>Date range:</strong> ' +
+        escapeHtml(dr.start || "") +
+        " → " +
+        escapeHtml(dr.end || "") +
+        "</p>" +
+        '<p class="meta-line"><strong>Area relabeled:</strong> ' +
+        m.change_percent +
+        "%</p>" +
+        '<div class="risk-row"><span class="badge ' +
+        riskBadgeClass(risk) +
+        '">' +
+        riskIcon(risk) +
+        " " +
+        risk +
+        "</span></div>" +
+        gptNote +
+        "</div>" +
+        '<div class="card"><h3>What changed</h3><p>' +
+        escapeHtml(n.what_changed || "") +
+        "</p>" +
+        transHtml +
+        "</div>" +
+        '<div class="card"><h3>Risk level</h3><div class="risk-row"><span class="badge ' +
+        riskBadgeClass(risk) +
+        '">' +
+        riskIcon(risk) +
+        " " +
+        risk +
+        "</span></div>" +
+        "<p>" +
+        escapeHtml(n.risk_meaning || "") +
+        "</p></div>" +
+        '<div class="card"><h3>Recommendations</h3>' +
+        recHtml +
+        "</div>";
     }
 
     function applyChangeModeLayerControls() {
@@ -1835,7 +1827,7 @@
         const panelA = document.getElementById("map-panel-a");
         const panelB = document.getElementById("map-panel-b");
         const panelC = document.getElementById("map-panel-c");
-        const reportPanel = document.getElementById("report-analysis");
+        const changeFooter = document.getElementById("change-analysis-footer");
         const labelA = document.getElementById("map-panel-a-label");
         const labelB = document.getElementById("map-panel-b-label");
         const labelC = document.getElementById("map-panel-c-label");
@@ -1846,7 +1838,7 @@
         mapGridRoot.classList.add("has-change-row");
         panelB.hidden = false;
         panelC.hidden = false;
-        reportPanel.hidden = false;
+        if (changeFooter) changeFooter.hidden = false;
         panelA.style.display = "flex";
         panelB.style.display = "flex";
 
@@ -1860,10 +1852,6 @@
         labelA.textContent = "Before · " + state.date_a;
         labelB.textContent = "After · " + state.date_b;
         labelC.textContent = "Change mask · " + state.date_a + " → " + state.date_b;
-
-        document.getElementById("report-layer").textContent = "Change Detection";
-        document.getElementById("report-dates").textContent = state.date_a + " → " + state.date_b;
-        document.getElementById("report-region").textContent = cityVal || "—";
 
         ensureMapC();
 
@@ -1944,7 +1932,7 @@
         const panelA = document.getElementById("map-panel-a");
         const panelB = document.getElementById("map-panel-b");
         const panelC = document.getElementById("map-panel-c");
-        const reportPanel = document.getElementById("report-analysis");
+        const changeFooter = document.getElementById("change-analysis-footer");
         const labelA = document.getElementById("map-panel-a-label");
         const labelB = document.getElementById("map-panel-b-label");
         const labelC = document.getElementById("map-panel-c-label");
@@ -1963,7 +1951,7 @@
           mapGridRoot.classList.remove("has-change-row");
           panelB.hidden = true;
           panelC.hidden = true;
-          reportPanel.hidden = true;
+          if (changeFooter) changeFooter.hidden = true;
           panelA.style.display = "flex";
           panelB.style.display = "none";
           labelA.textContent =
@@ -1982,13 +1970,13 @@
             floodSpotsLayerA.addTo(mapA);
           }
           lastChangeStats = null;
-          updateChangeSummary(null);
+          clearSummaryFromChangeStats();
         } else if (mode === "prediction" || mode === "timeseries") {
           mapGridRoot.classList.add("single-map-mode");
           mapGridRoot.classList.remove("has-change-row");
           panelB.hidden = true;
           panelC.hidden = true;
-          reportPanel.hidden = true;
+          if (changeFooter) changeFooter.hidden = true;
           panelA.style.display = "flex";
           panelB.style.display = "none";
           labelA.textContent =
@@ -2009,7 +1997,7 @@
             mapA.removeLayer(floodSpotsLayerA);
           }
           lastChangeStats = null;
-          updateChangeSummary(null);
+          clearSummaryFromChangeStats();
         }
 
         if (layerControlA) mapA.removeControl(layerControlA);
@@ -2032,15 +2020,6 @@
         if (layerControlC && mapC) {
           mapC.removeControl(layerControlC);
           layerControlC = null;
-        }
-
-        document.getElementById("report-layer").textContent = modeToLabel(data.mode);
-        document.getElementById("report-region").textContent = data.city;
-        const rd = document.getElementById("report-dates");
-        if (mode === "home" || data.date_a === data.date_b) {
-          rd.textContent = data.date_a_display;
-        } else {
-          rd.textContent = data.date_a_display + " → " + data.date_b_display;
         }
 
         setTimeout(() => {
@@ -2120,33 +2099,33 @@
       document.getElementById("reportBox").classList.remove("show");
     });
     document.getElementById("btnReport").addEventListener("click", async () => {
-      if (!lastChangeStats) {
-        alert("Run change detection first.");
+      const lastResult = lastChangeStats;
+      if (!lastResult) {
+        alert("Run Generate first.");
         return;
       }
       const box = document.getElementById("reportBox");
       const el = document.getElementById("reportContent");
-      const state = getUIState();
-      el.innerHTML = '<div class="report-card"><p>Generating...</p></div>';
+      el.innerHTML = '<div class="card"><p>Generating…</p></div>';
       box.classList.add("show");
       try {
         const res = await fetch(`${API_BASE}/api/report`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            region: (state.city || "").trim() || lastChangeStats.region_label,
+            region: document.getElementById("city").value.trim() || lastResult.region_label,
             date_range: {
-              start: lastChangeStats.before_date || state.date_a,
-              end: lastChangeStats.after_date || state.date_b,
+              start: document.getElementById("dateA").value,
+              end: document.getElementById("dateB").value,
             },
-            change_stats: lastChangeStats,
+            change_stats: lastResult,
           }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || res.statusText);
         renderReport(data);
       } catch (err) {
-        el.innerHTML = '<div class="report-card report-error">Error: ' + escapeHtml(err.message) + "</div>";
+        el.innerHTML = '<div class="card err-box">Error: ' + escapeHtml(err.message) + "</div>";
       }
     });
 
@@ -2291,8 +2270,9 @@
         const data = await res.json();
         appendMessage("bot", data.reply || "(empty reply)");
 
-        if (data.summary) {
-          document.getElementById("report-summary").textContent = data.summary;
+        if (data.summary && currentMode() !== "change_detection") {
+          const sumEl = document.getElementById("summary");
+          if (sumEl) sumEl.textContent = data.summary;
         }
       } catch (err) {
         console.error("Error calling /chat", err);
