@@ -2172,7 +2172,7 @@
         applyChangeModeLayerControls();
         syncLegendsForMode("change_detection");
 
-        if (mode !== "home" && mapA.hasLayer(floodSpotsLayerA)) {
+        if (mapA.hasLayer(floodSpotsLayerA)) {
           mapA.removeLayer(floodSpotsLayerA);
         }
 
@@ -2277,7 +2277,7 @@
               maxNativeZoom: data.city === "World" ? 14 : 19,
               maxZoom: 19,
               crossOrigin: true,
-            });
+            }).addTo(mapA);
           }
           if (!mapA.hasLayer(floodSpotsLayerA)) {
             floodSpotsLayerA.addTo(mapA);
