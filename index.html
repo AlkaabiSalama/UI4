@@ -438,6 +438,60 @@
       min-width: 140px;
     }
 
+    .change-presets {
+      margin-bottom: 8px;
+    }
+
+    .change-presets .field-caption {
+      margin-top: 0;
+      margin-bottom: 6px;
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .preset-card {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(51, 65, 85, 0.95);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.9);
+      color: #e2e8f0;
+      padding: 7px 9px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .preset-card:hover {
+      border-color: #60a5fa;
+      background: rgba(37, 99, 235, 0.16);
+    }
+
+    .preset-card.selected {
+      border-color: #3b82f6;
+      background: rgba(37, 99, 235, 0.22);
+    }
+
+    .preset-card strong {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      color: #f8fafc;
+    }
+
+    .preset-card span {
+      display: block;
+      font-size: 10px;
+      color: #94a3b8;
+      line-height: 1.35;
+    }
+
     label {
       font-size: 10px;
       color: var(--text-muted);
@@ -455,7 +509,8 @@
 
     select,
     input[type="text"],
-    input[type="date"] {
+    input[type="date"],
+    input[type="number"] {
       width: 100%;
       border-radius: 10px;
       border: 1px solid rgba(71, 85, 105, 0.95);
@@ -469,7 +524,8 @@
 
     select:focus,
     input[type="text"]:focus,
-    input[type="date"]:focus {
+    input[type="date"]:focus,
+    input[type="number"]:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 2px var(--accent-glow);
     }
@@ -1069,6 +1125,10 @@
             <div class="toolbar-fields">
             <div class="toolbar-field" id="date-controls-row">
               <label>Dates</label>
+              <div class="change-presets">
+                <div class="field-caption">Quick change-detection states (5): tap one to load instantly.</div>
+                <div class="preset-grid" id="changePresetGrid"></div>
+              </div>
               <div class="year-row">
                 <div id="dateA-container" style="flex:1;">
                   <small class="field-caption">Date A </small>
@@ -1270,6 +1330,102 @@
         note: "Mediterranean storm conditions caused localized flood impacts."
       }
     ];
+
+    const CHANGE_PRESET_OPTIONS = [
+      {
+        id: "ae-abu",
+        title: "UAE (Abu Dhabi)",
+        line: "Flash flood · Mar-May 2024",
+        region: "Abu Dhabi, United Arab Emirates",
+        date1: "2024-03-01",
+        date2: "2024-05-31",
+        window: 30,
+      },
+      {
+        id: "es-donana",
+        title: "Spain (Donana)",
+        line: "Drought / heatwave · Jun-Aug 2023",
+        region: "Donana National Park, Spain",
+        date1: "2023-06-01",
+        date2: "2023-08-31",
+        window: 30,
+      },
+      {
+        id: "in-monsoon",
+        title: "India (Assam)",
+        line: "Monsoon flood · May-Aug 2023",
+        region: "Assam, India",
+        date1: "2023-05-01",
+        date2: "2023-08-31",
+        window: 30,
+      },
+      {
+        id: "pt-storm",
+        title: "Portugal (Lisbon)",
+        line: "Storm / flood · Nov 2022-Jan 2023",
+        region: "Lisbon, Portugal",
+        date1: "2022-11-01",
+        date2: "2023-01-31",
+        window: 30,
+      },
+      {
+        id: "de-ahr",
+        title: "Germany (Ahr Valley)",
+        line: "Major flood · Jun-Aug 2021",
+        region: "Ahr Valley, Rhineland-Palatinate, Germany",
+        date1: "2021-06-01",
+        date2: "2021-08-31",
+        window: 30,
+      },
+    ];
+
+    let selectedChangePresetId = null;
+
+    function clearChangePresetSelection() {
+      selectedChangePresetId = null;
+      const grid = document.getElementById("changePresetGrid");
+      if (!grid) return;
+      grid.querySelectorAll(".preset-card").forEach((c) => c.classList.remove("selected"));
+    }
+
+    function applyChangePreset(preset, triggerLoad = true) {
+      document.getElementById("dateA").value = preset.date1;
+      document.getElementById("dateB").value = preset.date2;
+      document.getElementById("windowDays").value = String(preset.window || 30);
+      document.getElementById("city").value = preset.region;
+      const changeMode = document.querySelector('input[name="mode"][value="change_detection"]');
+      if (changeMode) changeMode.checked = true;
+
+      selectedChangePresetId = preset.id;
+      const grid = document.getElementById("changePresetGrid");
+      if (grid) {
+        grid.querySelectorAll(".preset-card").forEach((c) => {
+          c.classList.toggle("selected", c.dataset.presetId === preset.id);
+        });
+      }
+
+      updateDateUIForMode();
+      updateVideoToolsVisibility();
+      if (triggerLoad) loadMapFromBackend();
+    }
+
+    function buildChangePresetGrid() {
+      const grid = document.getElementById("changePresetGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+      CHANGE_PRESET_OPTIONS.forEach((preset) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "preset-card";
+        btn.dataset.presetId = preset.id;
+        btn.setAttribute("aria-label", preset.title + ": " + preset.line);
+        btn.innerHTML =
+          "<strong>" + preset.title + "</strong>" +
+          "<span>" + preset.line + "</span>";
+        btn.addEventListener("click", () => applyChangePreset(preset));
+        grid.appendChild(btn);
+      });
+    }
 
     function buildLegend() {
       const legend = document.getElementById("map-legend");
@@ -2085,6 +2241,17 @@
     document.getElementById("dateB").addEventListener("change", loadMapFromBackend);
     document.getElementById("windowDays").addEventListener("change", loadMapFromBackend);
     document.getElementById("city").addEventListener("blur", loadMapFromBackend);
+
+    function onManualPresetFieldChange() {
+      clearChangePresetSelection();
+    }
+    ["input", "change"].forEach((ev) => {
+      document.getElementById("dateA").addEventListener(ev, onManualPresetFieldChange);
+      document.getElementById("dateB").addEventListener(ev, onManualPresetFieldChange);
+      document.getElementById("windowDays").addEventListener(ev, onManualPresetFieldChange);
+      document.getElementById("city").addEventListener(ev, onManualPresetFieldChange);
+    });
+
     document.querySelectorAll('input[name="mode"]').forEach(r =>
       r.addEventListener("change", () => {
         updateDateUIForMode();
@@ -2132,6 +2299,7 @@
     document.getElementById("region-chip-clear").addEventListener("click", () => {
       document.getElementById("city").value = "";
       document.getElementById("region-chip-wrap").hidden = true;
+      clearChangePresetSelection();
       loadMapFromBackend();
     });
 
@@ -2200,6 +2368,7 @@
       downloadMapSnapshot(mapC, document.getElementById("map-panel-c-label").textContent);
     });
 
+    buildChangePresetGrid();
     initDateInputs();
     updateDateUIForMode();
     updateVideoToolsVisibility();
