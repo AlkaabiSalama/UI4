@@ -1,6 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from routes.core_routes import router as core_router
 from routes.map_routes import router as map_router
@@ -29,3 +30,4 @@ app.include_router(core_router)
 app.include_router(map_router)
 app.include_router(change_router)
 app.include_router(chat_router)
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")

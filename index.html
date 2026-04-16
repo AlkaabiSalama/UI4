@@ -438,6 +438,51 @@
       min-width: 140px;
     }
 
+    .prediction-controls {
+      display: none;
+      margin-top: 2px;
+      gap: 8px;
+      flex-direction: column;
+    }
+
+    .prediction-output {
+      display: none;
+      width: 100%;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.86);
+      padding: 14px;
+    }
+
+    .prediction-output.show {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+
+    .prediction-image {
+      width: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      display: none;
+      object-fit: contain;
+    }
+
+    .prediction-image.show {
+      display: block;
+    }
+
+    .prediction-message {
+      font-size: 12px;
+      color: var(--text-soft);
+      min-height: 18px;
+    }
+
     .change-presets {
       margin-bottom: 8px;
     }
@@ -1224,6 +1269,20 @@
                 <small class="field-caption">Window (+/- days around each date for change detection)</small>
                 <input type="number" id="windowDays" min="1" max="180" value="30" />
               </div>
+              <div class="prediction-controls" id="prediction-controls">
+                <div>
+                  <small class="field-caption">Prediction date</small>
+                  <select id="prediction-date">
+                    <option value="">Select date</option>
+                  </select>
+                </div>
+                <div>
+                  <small class="field-caption">Prediction region</small>
+                  <select id="prediction-region">
+                    <option value="">Select region</option>
+                  </select>
+                </div>
+              </div>
             </div>
             <div class="toolbar-field city-field">
               <label for="city">Region</label>
@@ -1292,6 +1351,10 @@
             <div class="map-inner"><div id="mapC"></div></div>
           </div>
         </div>
+        <div class="prediction-output" id="prediction-output">
+          <div class="prediction-message" id="prediction-message"></div>
+          <img id="prediction-image" class="prediction-image" alt="Prediction output" />
+        </div>
         <div class="map-legend" id="map-legend"></div>
       </div>
 
@@ -1331,6 +1394,7 @@
     let lastChangeStats = null;
     let lastVideoUrl = null;
     let busyCount = 0;
+    let predictionAssets = null;
 
     const DW_CLASSES = [
       { label: "Water", color: "#419bdf" },
@@ -1774,19 +1838,97 @@
       }
     }
 
+    async function loadPredictionAssets() {
+      if (predictionAssets) return predictionAssets;
+      const res = await fetch(`${API_BASE}/prediction-assets`);
+      const data = await res.json();
+      predictionAssets = data;
+      return data;
+    }
+
+    function populatePredictionDropdowns(data) {
+      const dateSelect = document.getElementById("prediction-date");
+      const regionSelect = document.getElementById("prediction-region");
+      dateSelect.innerHTML = '<option value="">Select date</option>';
+      regionSelect.innerHTML = '<option value="">Select region</option>';
+
+      (data.dates || []).forEach((value) => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = value;
+        dateSelect.appendChild(opt);
+      });
+      (data.regions || []).forEach((value) => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
+        regionSelect.appendChild(opt);
+      });
+    }
+
+    function renderPredictionSelection() {
+      const outputWrap = document.getElementById("prediction-output");
+      const image = document.getElementById("prediction-image");
+      const message = document.getElementById("prediction-message");
+      const mapGridRoot = document.getElementById("map-grid-root");
+      const legend = document.getElementById("map-legend");
+      const panelA = document.getElementById("map-panel-a");
+      const panelB = document.getElementById("map-panel-b");
+      const panelC = document.getElementById("map-panel-c");
+      const changeFooter = document.getElementById("change-analysis-footer");
+      const dateValue = document.getElementById("prediction-date").value;
+      const regionValue = document.getElementById("prediction-region").value;
+
+      mapGridRoot.style.display = "none";
+      outputWrap.classList.add("show");
+      if (legend) legend.style.display = "none";
+      panelA.style.display = "none";
+      panelB.style.display = "none";
+      panelC.hidden = true;
+      if (changeFooter) changeFooter.hidden = true;
+
+      image.classList.remove("show");
+      image.removeAttribute("src");
+      if (!predictionAssets || !predictionAssets.ok) {
+        message.textContent = predictionAssets?.message || "Prediction outputs are not available.";
+        return;
+      }
+      if (!dateValue || !regionValue) {
+        message.textContent = "Select a date and region to view the prediction image.";
+        return;
+      }
+
+      const match = (predictionAssets.items || []).find((item) => item.date === dateValue && item.region === regionValue);
+      if (!match) {
+        message.textContent = "No prediction image available for the selected date and region.";
+        return;
+      }
+
+      image.src = match.image_url;
+      image.classList.add("show");
+      message.textContent = "";
+    }
+
     function updateDateUIForMode() {
       const mode = currentMode();
       const bBox = document.getElementById("dateB-container");
       const presetsWrap = document.querySelector(".change-presets");
       const windowWrap = document.getElementById("change-window-wrap");
+      const predictionControls = document.getElementById("prediction-controls");
+      const cityField = document.querySelector(".toolbar-field.city-field");
       if (mode === "home") {
         bBox.style.display = "none";
       } else {
         bBox.style.display = "block";
       }
       const showChangeOnly = mode === "change_detection";
+      const isPrediction = mode === "prediction";
       if (presetsWrap) presetsWrap.style.display = showChangeOnly ? "block" : "none";
       if (windowWrap) windowWrap.style.display = showChangeOnly ? "block" : "none";
+      if (predictionControls) predictionControls.style.display = isPrediction ? "flex" : "none";
+      document.getElementById("dateA-container").style.display = isPrediction ? "none" : "block";
+      bBox.style.display = isPrediction ? "none" : bBox.style.display;
+      if (cityField) cityField.style.display = isPrediction ? "none" : "block";
     }
 
     function updateVideoToolsVisibility() {
@@ -2304,6 +2446,32 @@
     async function loadMapFromBackend() {
       beginLoading();
       const state = getUIState();
+      const mapGridRoot = document.getElementById("map-grid-root");
+      const predictionOutput = document.getElementById("prediction-output");
+      const legend = document.getElementById("map-legend");
+      if (state.mode === "prediction") {
+        try {
+          const assets = await loadPredictionAssets();
+          populatePredictionDropdowns(assets);
+          renderPredictionSelection();
+        } catch (err) {
+          predictionAssets = {
+            ok: false,
+            message: "Prediction outputs are not available.",
+            dates: [],
+            regions: [],
+            items: [],
+          };
+          renderPredictionSelection();
+        } finally {
+          endLoading();
+        }
+        return;
+      }
+
+      if (predictionOutput) predictionOutput.classList.remove("show");
+      if (mapGridRoot) mapGridRoot.style.display = "";
+      if (legend) legend.style.display = "";
       if (state.mode === "change_detection") {
         await loadChangeDetectionMode(state);
         endLoading();
@@ -2519,6 +2687,8 @@
 
     document.getElementById("dateA").addEventListener("change", loadMapFromBackend);
     document.getElementById("dateB").addEventListener("change", loadMapFromBackend);
+    document.getElementById("prediction-date").addEventListener("change", renderPredictionSelection);
+    document.getElementById("prediction-region").addEventListener("change", renderPredictionSelection);
     document.getElementById("windowDays").addEventListener("change", loadMapFromBackend);
     document.getElementById("city").addEventListener("blur", loadMapFromBackend);
 
