@@ -743,36 +743,6 @@
       height: 100%;
     }
 
-    #prediction-date,
-    #prediction-region {
-      margin-top: 4px;
-      width: 100%;
-      border-radius: 8px;
-      border: 1px solid rgba(148, 163, 184, 0.45);
-      background: rgba(15, 23, 42, 0.95);
-      color: #e5e7eb;
-      font-size: 12px;
-      padding: 8px 10px;
-    }
-
-    .prediction-image-wrap {
-      position: absolute;
-      inset: 0;
-      z-index: 500;
-      background: rgba(2, 6, 23, 0.96);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-    }
-
-    .prediction-image-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      border-radius: 8px;
-    }
-
     .map-legend {
       position: absolute;
       bottom: max(12px, env(safe-area-inset-bottom, 12px));
@@ -1244,7 +1214,6 @@
                 <div id="dateA-container" style="flex:1;">
                   <small class="field-caption">Date A </small>
                   <input type="date" id="dateA" min="2018-01-01" />
-                  <select id="prediction-date" style="display:none;"></select>
                 </div>
                 <div id="dateB-container" style="flex:1;">
                   <small class="field-caption">Date B </small>
@@ -1259,7 +1228,6 @@
             <div class="toolbar-field city-field">
               <label for="city">Region</label>
               <input id="city" type="text" placeholder="City or area… (optional on Home)" />
-              <select id="prediction-region" style="display:none;"></select>
               <div class="field-caption">Home: empty region = world view. Chat can set location.</div>
               <div id="region-chip-wrap" class="region-chip-wrap" hidden>
                 <span class="region-chip" id="region-chip-label"></span>
@@ -1299,9 +1267,6 @@
               </div>
               <div class="map-inner">
                 <div id="mapA"></div>
-                <div class="prediction-image-wrap" id="prediction-image-wrap-a" hidden>
-                  <img id="prediction-image-a" alt="Prediction result A" />
-                </div>
                 <div class="video-preview" id="video-preview" hidden>
                   <div class="video-preview-head">
                     <span id="video-preview-title">Time series preview</span>
@@ -1316,12 +1281,7 @@
                 <span class="map-panel-title" id="map-panel-b-label">Map B</span>
                 <button type="button" class="map-download-btn" id="btn-download-map-b">Download</button>
               </div>
-              <div class="map-inner">
-                <div id="mapB"></div>
-                <div class="prediction-image-wrap" id="prediction-image-wrap-b" hidden>
-                  <img id="prediction-image-b" alt="Prediction result B" />
-                </div>
-              </div>
+              <div class="map-inner"><div id="mapB"></div></div>
             </div>
           </div>
           <div class="map-panel" id="map-panel-c" hidden>
@@ -1371,7 +1331,6 @@
     let lastChangeStats = null;
     let lastVideoUrl = null;
     let busyCount = 0;
-    let predictionOptionsCache = null;
 
     const DW_CLASSES = [
       { label: "Water", color: "#419bdf" },
@@ -1820,7 +1779,7 @@
       const bBox = document.getElementById("dateB-container");
       const presetsWrap = document.querySelector(".change-presets");
       const windowWrap = document.getElementById("change-window-wrap");
-      if (mode === "home" || mode === "prediction") {
+      if (mode === "home") {
         bBox.style.display = "none";
       } else {
         bBox.style.display = "block";
@@ -1833,114 +1792,6 @@
     function updateVideoToolsVisibility() {
       const tools = document.getElementById("video-tools");
       tools.style.display = currentMode() === "timeseries" ? "block" : "none";
-    }
-
-    function setPredictionImageVisibility(enabled) {
-      const mapAEl = document.getElementById("mapA");
-      const mapBEl = document.getElementById("mapB");
-      const wrapA = document.getElementById("prediction-image-wrap-a");
-      const wrapB = document.getElementById("prediction-image-wrap-b");
-      if (mapAEl) mapAEl.style.display = enabled ? "none" : "block";
-      if (mapBEl) mapBEl.style.display = enabled ? "none" : "block";
-      if (wrapA) wrapA.hidden = !enabled;
-      if (wrapB) wrapB.hidden = !enabled;
-    }
-
-    async function loadPredictionOptions() {
-      if (predictionOptionsCache) return predictionOptionsCache;
-      const res = await fetch(`${API_BASE}/prediction-options`);
-      if (!res.ok) throw new Error("Failed to load prediction options.");
-      predictionOptionsCache = await res.json();
-      return predictionOptionsCache;
-    }
-
-    function setSelectOptions(selectEl, values) {
-      const optionsHtml = values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
-      selectEl.innerHTML = optionsHtml;
-    }
-
-    function syncPredictionDropdowns() {
-      if (!predictionOptionsCache) return;
-      const dateSelect = document.getElementById("prediction-date");
-      const regionSelect = document.getElementById("prediction-region");
-      const regionToDates = predictionOptionsCache.options_by_region || {};
-      const dateToRegions = predictionOptionsCache.options_by_date || {};
-
-      const currentRegion = regionSelect.value || predictionOptionsCache.default_region || "";
-      const allowedDates = regionToDates[currentRegion] || predictionOptionsCache.dates || [];
-      setSelectOptions(dateSelect, allowedDates);
-
-      let nextDate = dateSelect.value;
-      if (!allowedDates.includes(nextDate)) {
-        nextDate = allowedDates[0] || "";
-        dateSelect.value = nextDate;
-      }
-
-      const allowedRegions = dateToRegions[nextDate] || predictionOptionsCache.regions || [];
-      setSelectOptions(regionSelect, allowedRegions);
-      if (!allowedRegions.includes(currentRegion)) {
-        regionSelect.value = allowedRegions[0] || "";
-      } else {
-        regionSelect.value = currentRegion;
-      }
-
-      const finalRegion = regionSelect.value;
-      const finalDates = regionToDates[finalRegion] || [];
-      if (!finalDates.includes(dateSelect.value)) {
-        setSelectOptions(dateSelect, finalDates);
-        dateSelect.value = finalDates[0] || "";
-      }
-    }
-
-    async function ensurePredictionDropdownsReady() {
-      const options = await loadPredictionOptions();
-      const dateSelect = document.getElementById("prediction-date");
-      const regionSelect = document.getElementById("prediction-region");
-
-      if (!dateSelect.dataset.initialized) {
-        setSelectOptions(regionSelect, options.regions || []);
-        setSelectOptions(dateSelect, options.dates || []);
-        regionSelect.value = options.default_region || "";
-        syncPredictionDropdowns();
-        dateSelect.dataset.initialized = "true";
-      }
-    }
-
-    function updatePredictionControlsForMode() {
-      const mode = currentMode();
-      const isPrediction = mode === "prediction";
-      const dateInput = document.getElementById("dateA");
-      const cityInput = document.getElementById("city");
-      const dateSelect = document.getElementById("prediction-date");
-      const regionSelect = document.getElementById("prediction-region");
-      const chipWrap = document.getElementById("region-chip-wrap");
-
-      dateInput.style.display = isPrediction ? "none" : "block";
-      cityInput.style.display = isPrediction ? "none" : "block";
-      dateSelect.style.display = isPrediction ? "block" : "none";
-      regionSelect.style.display = isPrediction ? "block" : "none";
-      chipWrap.hidden = isPrediction ? true : chipWrap.hidden;
-    }
-
-    async function loadPredictionImages() {
-      await ensurePredictionDropdownsReady();
-      syncPredictionDropdowns();
-      const dateSelect = document.getElementById("prediction-date");
-      const regionSelect = document.getElementById("prediction-region");
-      const selectedDate = dateSelect.value;
-      const selectedRegion = regionSelect.value;
-      const imageUrl = `${API_BASE}/prediction-image?region=${encodeURIComponent(selectedRegion)}&date=${encodeURIComponent(selectedDate)}`;
-
-      const imgA = document.getElementById("prediction-image-a");
-      const imgB = document.getElementById("prediction-image-b");
-      imgA.src = imageUrl;
-      imgB.src = imageUrl;
-
-      document.getElementById("map-panel-a-label").textContent = `Prediction · ${selectedRegion} · ${selectedDate}`;
-      document.getElementById("map-panel-b-label").textContent = `Prediction image · ${selectedRegion} · ${selectedDate}`;
-      document.getElementById("dateA").value = selectedDate;
-      document.getElementById("dateB").value = selectedDate;
-      document.getElementById("city").value = selectedRegion;
     }
 
     function showVideoPreview(url, title) {
@@ -1976,14 +1827,11 @@
     }
 
     function getUIState() {
-      const mode = currentMode();
-      const predictionDate = document.getElementById("prediction-date").value;
-      const predictionRegion = document.getElementById("prediction-region").value;
       return {
-        mode: mode,
-        date_a: mode === "prediction" ? predictionDate : document.getElementById("dateA").value,
-        date_b: mode === "prediction" ? predictionDate : document.getElementById("dateB").value,
-        city: mode === "prediction" ? predictionRegion : (document.getElementById("city").value || ""),
+        mode: currentMode(),
+        date_a: document.getElementById("dateA").value,
+        date_b: document.getElementById("dateB").value,
+        city: document.getElementById("city").value || "",
         region_bbox: selectedChangePresetRegionBbox,
         window_days: Number(document.getElementById("windowDays").value || 30),
       };
@@ -2457,47 +2305,12 @@
       beginLoading();
       const state = getUIState();
       if (state.mode === "change_detection") {
-        setPredictionImageVisibility(false);
         await loadChangeDetectionMode(state);
         endLoading();
         return;
       }
-      if (state.mode === "prediction") {
-        try {
-          await ensurePredictionDropdownsReady();
-          updatePredictionControlsForMode();
-          await loadPredictionImages();
-
-          const mapGridRoot = document.getElementById("map-grid-root");
-          const panelA = document.getElementById("map-panel-a");
-          const panelB = document.getElementById("map-panel-b");
-          const panelC = document.getElementById("map-panel-c");
-          const changeFooter = document.getElementById("change-analysis-footer");
-
-          mapGridRoot.classList.remove("single-map-mode");
-          mapGridRoot.classList.remove("has-change-row");
-          panelB.hidden = false;
-          panelC.hidden = true;
-          if (changeFooter) changeFooter.hidden = true;
-          panelA.style.display = "flex";
-          panelB.style.display = "flex";
-          setPredictionImageVisibility(true);
-          syncChangeModeLegends(false);
-          if (layerControlA) { mapA.removeControl(layerControlA); layerControlA = null; }
-          if (layerControlB) { mapB.removeControl(layerControlB); layerControlB = null; }
-          if (layerControlC && mapC) { mapC.removeControl(layerControlC); layerControlC = null; }
-          lastChangeStats = null;
-          clearSummaryFromChangeStats();
-        } catch (err) {
-          console.error("Error loading prediction images", err);
-        } finally {
-          endLoading();
-        }
-        return;
-      }
 
       try {
-        setPredictionImageVisibility(false);
         const res = await fetch(`${API_BASE}/map-config`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2588,7 +2401,7 @@
           }
           lastChangeStats = null;
           clearSummaryFromChangeStats();
-        } else if (mode === "timeseries") {
+        } else if (mode === "prediction" || mode === "timeseries") {
           mapGridRoot.classList.add("single-map-mode");
           mapGridRoot.classList.remove("has-change-row");
           panelB.hidden = true;
@@ -2708,8 +2521,6 @@
     document.getElementById("dateB").addEventListener("change", loadMapFromBackend);
     document.getElementById("windowDays").addEventListener("change", loadMapFromBackend);
     document.getElementById("city").addEventListener("blur", loadMapFromBackend);
-    document.getElementById("prediction-date").addEventListener("change", loadMapFromBackend);
-    document.getElementById("prediction-region").addEventListener("change", loadMapFromBackend);
 
     function onManualPresetFieldChange() {
       clearChangePresetSelection();
@@ -2725,7 +2536,6 @@
       r.addEventListener("change", () => {
         updateDateUIForMode();
         updateVideoToolsVisibility();
-        updatePredictionControlsForMode();
         loadMapFromBackend();
       })
     );
@@ -2847,7 +2657,6 @@
     initDateInputs();
     updateDateUIForMode();
     updateVideoToolsVisibility();
-    updatePredictionControlsForMode();
     syncChangeModeLegends(currentMode() === "change_detection");
     loadMapFromBackend();
 
@@ -2894,7 +2703,6 @@
       applyChatTextToControls(text);
       updateDateUIForMode();
       updateVideoToolsVisibility();
-      updatePredictionControlsForMode();
       await loadMapFromBackend();
 
       const state = getUIState();
