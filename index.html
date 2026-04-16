@@ -460,6 +460,8 @@
 
     .prediction-image {
       width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
       border-radius: 10px;
       border: 1px solid rgba(71, 85, 105, 0.85);
       display: none;
@@ -473,6 +475,15 @@
       font-size: 12px;
       color: var(--text-soft);
       min-height: 18px;
+    }
+
+    .prediction-download-wrap {
+      margin-top: 10px;
+      display: none;
+    }
+
+    .prediction-download-wrap.show {
+      display: block;
     }
 
     .change-presets {
@@ -1346,6 +1357,16 @@
         <div class="prediction-output" id="prediction-output">
           <div class="prediction-message" id="prediction-message"></div>
           <img id="prediction-image" class="prediction-image" alt="Prediction output" />
+          <div id="prediction-download-wrap" class="prediction-download-wrap">
+            <a
+              id="prediction-download-link"
+              class="map-download-btn"
+              href="#"
+              download="prediction.png"
+            >
+              Download
+            </a>
+          </div>
         </div>
         <div class="map-legend" id="map-legend"></div>
       </div>
@@ -1853,7 +1874,7 @@
       (data.regions || []).forEach((value) => {
         const opt = document.createElement("option");
         opt.value = value;
-        opt.textContent = value;
+        opt.textContent = value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
         regionSelect.appendChild(opt);
       });
     }
@@ -1868,6 +1889,8 @@
       const panelB = document.getElementById("map-panel-b");
       const panelC = document.getElementById("map-panel-c");
       const changeFooter = document.getElementById("change-analysis-footer");
+      const predictionDownloadWrap = document.getElementById("prediction-download-wrap");
+      const predictionDownloadLink = document.getElementById("prediction-download-link");
       const dateValue = document.getElementById("prediction-date").value;
       const regionValue = document.getElementById("prediction-region").value;
 
@@ -1881,6 +1904,8 @@
 
       image.classList.remove("show");
       image.removeAttribute("src");
+      predictionDownloadWrap.classList.remove("show");
+      predictionDownloadLink.removeAttribute("href");
       if (!predictionAssets || !predictionAssets.ok) {
         message.textContent = predictionAssets?.message || "Prediction outputs are not available.";
         return;
@@ -1898,6 +1923,9 @@
 
       image.src = match.image_url;
       image.classList.add("show");
+      predictionDownloadLink.href = match.image_url;
+      predictionDownloadLink.download = `${match.region}_${match.date}_prediction.png`;
+      predictionDownloadWrap.classList.add("show");
       message.textContent = "";
     }
 
