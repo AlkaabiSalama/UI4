@@ -438,6 +438,7 @@
       min-width: 140px;
     }
 
+    /* Prediction tab only */
     .prediction-controls {
       display: none;
       margin-top: 2px;
@@ -1351,6 +1352,7 @@
             <div class="map-inner"><div id="mapC"></div></div>
           </div>
         </div>
+        <!-- Prediction tab only -->
         <div class="prediction-output" id="prediction-output">
           <div class="prediction-message" id="prediction-message"></div>
           <img id="prediction-image" class="prediction-image" alt="Prediction output" />
@@ -1838,6 +1840,7 @@
       }
     }
 
+    // Prediction tab only
     async function loadPredictionAssets() {
       if (predictionAssets) return predictionAssets;
       const res = await fetch(`${API_BASE}/prediction-assets`);
