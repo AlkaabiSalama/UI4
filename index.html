@@ -438,7 +438,6 @@
       min-width: 140px;
     }
 
-
     .prediction-controls {
       display: none;
       margin-top: 2px;
@@ -456,25 +455,11 @@
     }
 
     .prediction-output.show {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: auto;
-=======
       display: block;
     }
 
     .prediction-image {
       width: 100%;
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 10px;
-      border: 1px solid rgba(71, 85, 105, 0.85);
-      display: none;
-      object-fit: contain;
-=======
       border-radius: 10px;
       border: 1px solid rgba(71, 85, 105, 0.85);
       display: none;
@@ -1358,8 +1343,6 @@
             <div class="map-inner"><div id="mapC"></div></div>
           </div>
         </div>
-        <!-- Prediction tab only -->
-=======
         <div class="prediction-output" id="prediction-output">
           <div class="prediction-message" id="prediction-message"></div>
           <img id="prediction-image" class="prediction-image" alt="Prediction output" />
@@ -1847,7 +1830,6 @@
       }
     }
 
-    // Prediction tab only
     async function loadPredictionAssets() {
       if (predictionAssets) return predictionAssets;
       const res = await fetch(`${API_BASE}/prediction-assets`);
@@ -1871,7 +1853,7 @@
       (data.regions || []).forEach((value) => {
         const opt = document.createElement("option");
         opt.value = value;
-
+        opt.textContent = value;
         regionSelect.appendChild(opt);
       });
     }
